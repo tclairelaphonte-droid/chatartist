@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backstage — La communauté officielle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --surface:#f6f6f8;
+    --surface-2:#eeeef1;
+    --border:#e7e7ec;
+    --ink:#17171b;
+    --muted:#6e6e79;
+    --red:#e11d3c;
+    --red-dark:#b91530;
+    --red-soft:rgba(225,29,60,.08);
+    --blue:#2457e8;
+    --blue-soft:rgba(36,87,232,.08);
+    --font-display:'Fraunces',serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --shadow-sm:0 2px 10px rgba(23,23,27,.05);
+    --shadow-md:0 12px 32px rgba(23,23,27,.09);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); -webkit-font-smoothing:antialiased;}
+  a{color:inherit; text-decoration:none;}
+  img{display:block; max-width:100%;}
+  .reveal{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  nav{
+    position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
+    padding:20px 48px; background:rgba(255,255,255,.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .logo{font-family:var(--font-display); font-style:italic; font-weight:600; font-size:21px; letter-spacing:.2px;}
+  .logo span{color:var(--red); font-style:normal;}
+  .nav-links{display:flex; gap:30px; align-items:center; font-size:14.5px; flex-wrap:wrap;}
+  .nav-links a.plain{color:var(--muted); position:relative; padding-bottom:2px;}
+  .nav-links a.plain::after{content:'';position:absolute;left:0;bottom:-3px;width:0;height:1.5px;background:var(--blue);transition:width .25s ease;}
+  .nav-links a.plain:hover{color:var(--blue);}
+  .nav-links a.plain:hover::after{width:100%;}
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:14px; padding:11px 22px; border-radius:999px;
+    border:1px solid var(--border); background:#fff; color:var(--ink); cursor:pointer; transition:all .2s ease; display:inline-block;
+  }
+  .btn:hover{border-color:var(--blue); color:var(--blue); box-shadow:var(--shadow-sm);}
+  .btn.primary{background:var(--red); border-color:var(--red); color:#fff;}
+  .btn.primary:hover{background:var(--red-dark); border-color:var(--red-dark); color:#fff; box-shadow:0 8px 22px rgba(225,29,60,.28); transform:translateY(-1px);}
+  .hero{position:relative; height:82vh; min-height:560px; margin:0; overflow:hidden; display:flex; align-items:flex-end;}
+  .hero img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scale(1.06); animation:heroZoom 16s ease-out forwards;}
+  @keyframes heroZoom{ from{transform:scale(1.12);} to{transform:scale(1.0);} }
+  .hero::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(to top, #ffffff 0%, rgba(255,255,255,.15) 30%, rgba(15,10,20,.15) 60%, rgba(15,10,20,.35) 100%);
+  }
+  .hero-content{position:relative; z-index:2; padding:0 48px 64px; max-width:680px;}
+  .hero-content .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#fff; opacity:.9; margin-bottom:16px; text-shadow:0 1px 12px rgba(0,0,0,.4);}
+  .hero-content h1{font-family:var(--font-display); font-weight:600; font-size:clamp(36px,5.4vw,60px); line-height:1.05; color:#fff; margin:0 0 16px; text-shadow:0 2px 20px rgba(0,0,0,.35);}
+  .hero-content h1 em{color:#ffd8de; font-style:italic;}
+  .hero-content p{color:rgba(255,255,255,.92); font-size:17px; line-height:1.6; max-width:480px; margin:0 0 30px; text-shadow:0 1px 12px rgba(0,0,0,.35);}
+  .hero-content .btn.primary{padding:15px 30px; font-size:15px;}
+  .section{max-width:1180px; margin:0 auto; padding:96px 48px;}
+  .section-head{text-align:center; max-width:560px; margin:0 auto 56px;}
+  .section-head .eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:14px;}
+  .section-head h2{font-family:var(--font-display); font-size:clamp(28px,3.4vw,40px); font-weight:600; margin:0 0 14px;}
+  .section-head p{color:var(--muted); font-size:15.5px; line-height:1.6;}
+  .ticket-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:32px;}
+  .ticket{background:#fff; border:1px solid var(--border); border-radius:22px; overflow:hidden; box-shadow:var(--shadow-sm); transition:transform .35s ease, box-shadow .35s ease;}
+  .ticket:hover{transform:translateY(-8px); box-shadow:var(--shadow-md);}
+  .ticket .photo-wrap{position:relative; height:230px; overflow:hidden; background:var(--surface-2);}
+  .ticket .photo-wrap img{width:100%; height:100%; object-fit:cover; transition:transform .6s ease;}
+  .ticket:hover .photo-wrap img{transform:scale(1.08);}
+  .ticket .genre-tag{position:absolute; top:14px; left:14px; background:rgba(255,255,255,.92); backdrop-filter:blur(4px); font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; padding:6px 12px; border-radius:999px; color:var(--ink);}
+  .ticket .body{padding:22px 24px 24px;}
+  .ticket .name{font-family:var(--font-display); font-size:23px; font-weight:600; margin:0 0 6px;}
+  .ticket .tagline{color:var(--muted); font-size:13.5px; line-height:1.5; margin:0 0 18px; min-height:38px;}
+  .perf{border-top:1.5px dashed var(--border); margin:0 0 18px; position:relative;}
+  .perf::before, .perf::after{content:''; position:absolute; top:-8px; width:16px; height:16px; border-radius:50%; background:var(--bg);}
+  .perf::before{left:-24px;} .perf::after{right:-24px;}
+  .ticket .stats{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-bottom:18px;}
+  .ticket .stats b{color:var(--ink); font-weight:600;}
+  .ticket .discover{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; border-radius:12px; background:var(--surface); font-weight:600; font-size:13.5px; transition:all .2s ease;}
+  .ticket .discover:hover{background:var(--red-soft); color:var(--red);}
+  .strip{background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .strip .section{padding:80px 48px;}
+  .feat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:40px;}
+  .feat .num{font-family:var(--font-mono); font-size:12px; color:var(--red); margin-bottom:14px; letter-spacing:.08em;}
+  .feat h3{font-family:var(--font-display); font-size:20px; font-weight:600; margin:0 0 10px;}
+  .feat p{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0;}
+  .cta-band{max-width:1180px; margin:0 auto 100px; padding:64px 48px; border-radius:28px; background:linear-gradient(135deg, #fff 0%, var(--surface) 100%); border:1px solid var(--border); text-align:center; box-shadow:var(--shadow-sm);}
+  .cta-band h2{font-family:var(--font-display); font-size:clamp(26px,3vw,36px); font-weight:600; margin:0 0 14px;}
+  .cta-band p{color:var(--muted); margin:0 0 28px; font-size:15.5px;}
+  footer{border-top:1px solid var(--border); padding:36px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;}
+  footer .flogo{font-family:var(--font-display); font-style:italic; font-weight:600; font-size:16px;}
+  footer .flogo span{color:var(--red); font-style:normal;}
+  footer .fmeta{font-family:var(--font-mono); font-size:11.5px; color:var(--muted);}
+  .ticket-empty{grid-column:1/-1; text-align:center; color:var(--muted); font-family:var(--font-mono); font-size:13px; padding:40px 20px;}
+  @media (max-width:900px){
+    .ticket-grid, .feat-grid{grid-template-columns:1fr;}
+    nav,.section,.strip .section{padding-left:22px; padding-right:22px;}
+    .hero-content{padding:0 22px 48px;}
+  }
+  @media (max-width:520px){
+    nav{flex-wrap:wrap; gap:12px; padding:16px;}
+    .nav-links{width:100%; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+    .hero{min-height:420px; height:70vh;}
+    .hero-content{padding:0 18px 36px;}
+    .hero-content .btn.primary{width:100%; text-align:center;}
+    .section{padding:56px 18px;}
+    .cta-band{margin-left:18px; margin-right:18px; padding:40px 22px;}
+  }
+
+.fan-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fan-avatar-wrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+.fan-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.fan-avatar-upload {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  color: white;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+}
+.fan-avatar-upload input {
+  display: none;
+}
+.fan-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fan-profile-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.fan-profile-upload-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.fan-profile-upload-text:hover {
+  color: var(--blue);
+}
+
+/* Bouton Messages + panneau */
+.msg-btn-wrap {
+  position: relative;
+}
+.msg-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .2s;
+}
+.msg-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.msg-btn .msg-badge {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.msg-btn .msg-badge.show {
+  display: inline-flex;
+}
+.msg-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(340px, 92vw);
+  max-height: 380px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  z-index: 80;
+  padding: 8px;
+}
+.msg-panel.show {
+  display: block;
+}
+.msg-panel .msg-panel-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px 6px;
+}
+.msg-panel .fan-inbox-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.msg-panel .fan-inbox-item:hover {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.msg-panel .av {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.msg-panel .meta { flex: 1; min-width: 0; }
+.msg-panel .aname { font-weight: 600; font-size: 13.5px; }
+.msg-panel .snippet {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.msg-panel .item-badge {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border-radius: 999px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+.msg-panel .fan-inbox-empty {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  padding: 16px 12px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo"><span>◆</span> Backstage</span>
+  <div class="nav-links" id="navLinks">
+    <a href="#artistes" class="plain">Artistes</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1800&q=80" alt="Concert live, foule et projecteurs">
+  <div class="hero-content">
+    <div class="eyebrow" id="heroEyebrow">Plateforme officielle</div>
+    <h1>Vivez la coulisse, <em>pas juste le concert.</em></h1>
+    <p>Un espace unique où vos avis façonnent vraiment les prochaines chansons, les clips et les tournées. Votre voix arrive directement chez l'artist.</p>
+    <a href="#artistes" class="btn primary">voir son artiste</a>
+  </div>
+</section>
+
+<section class="section" id="artistes">
+  <div class="section-head reveal">
+    <div class="eyebrow">Nos artistes</div>
+    <h2>Plusieurs univers, une seule communauté</h2>
+    <p>Choisissez un artiste pour découvrir son univers et échanger directement avec l’artiste.</p>
+  </div>
+
+  <div class="ticket-grid" id="ticketGrid">
+    <div class="ticket-empty">Chargement des artistes…</div>
+  </div>
+</section>
+
+<div class="strip">
+  <div class="section">
+    <div class="feat-grid">
+      <div class="feat reveal">
+        <div class="num">01</div>
+        <h3>Un message, un artiste</h3>
+        <p>Chaque discussion démarrée depuis une page artiste lui est automatiquement associée — vous n’avez rien à sélectionner.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="num">02</div>
+        <h3>Lu par l'artist</h3>
+        <p>Vos idées de clips, vos titres préférés et vos retours arrivent directement dans le tableau de bord de l'artist.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="num">03</div>
+        <h3>Des décisions, pas des suppositions</h3>
+        <p>Les choix artistiques s’appuient sur vos retours réels : chansons, clips, événements et stratégie.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-band reveal">
+  <h2>Prêt à faire entendre votre voix ?</h2>
+  <p>Créez votre compte en moins d’une minute et commencez la conversation.</p>
+  <a href="#artistes" class="btn primary">voir son artiste</a>
+</div>
+
+<footer>
+  <span class="flogo"><span>◆</span> Backstage</span>
+  <span class="fmeta">plateforme communautaire officielle</span>
+</footer>
+
+<script src="api.js"></script>
+<script>
+  const LOCAL_COVERS = {
+    "bruce springsteen": "assets/artiste1/cover2.jpg",
+    "annalisa scarrone": "assets/artiste1/cover3.jpg",
+    "shania twain": "assets/artiste1/cover5.jpg"
+  };
+
+  const PLACEHOLDER_COVER =
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500">' +
+      '<rect fill="#eeeef1" width="100%" height="100%"/>' +
+      '<text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#6e6e79" font-family="system-ui,sans-serif" font-size="20">Pas de photo</text>' +
+      "</svg>"
+    );
+
+  function mediaUrl(url) {
+    if (!url) return "";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("data:") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    if (url.startsWith("assets/")) return url;
+    if (typeof API_BASE !== "undefined") {
+      return url.startsWith("/") ? API_BASE + url : API_BASE + "/" + url;
+    }
+    return url;
+  }
+
+  function coverForArtist(a) {
+    var fromApi = mediaUrl(a.cover_url) || mediaUrl(a.avatar_url);
+    if (fromApi) return fromApi;
+    var key = (a.name || "").toLowerCase().trim();
+    if (LOCAL_COVERS[key]) return LOCAL_COVERS[key];
+    return PLACEHOLDER_COVER;
+  }
+
+  function observeReveals() {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".reveal").forEach(function (el) {
+      io.observe(el);
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function setupFanAvatarPreview() {
+    var avatarImg = document.getElementById("fanAvatar");
+    var input = document.getElementById("fanAvatarInput");
+    if (!avatarImg || !input) return;
+
+    var placeholder =
+      "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84">' +
+        '<rect fill="#eeeef1" width="100%" height="100%"/>' +
+        '<text x="50%" y="54%" text-anchor="middle" fill="#6e6e79" font-family="system-ui,sans-serif" font-size="28">👤</text>' +
+        "</svg>"
+      );
+
+    avatarImg.src = placeholder;
+
+    (async function loadFromServer() {
+      try {
+        if (typeof api !== "function") return;
+        var me = await api("/auth/me");
+        if (me && me.avatar_url) {
+          avatarImg.src = mediaUrl(me.avatar_url);
+          try {
+            localStorage.setItem("backstage_fan_avatar", me.avatar_url);
+          } catch (e) {}
+        } else {
+          var saved = localStorage.getItem("backstage_fan_avatar");
+          if (saved && saved.indexOf("/files/") === 0) {
+            avatarImg.src = mediaUrl(saved);
+          } else if (saved && saved.indexOf("data:") === 0) {
+            avatarImg.src = saved;
+          }
+        }
+      } catch (e) {
+        console.warn("avatar me:", e);
+      }
+    })();
+
+    input.addEventListener("change", async function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+        alert("Format accepté : JPG, PNG ou WebP");
+        return;
+      }
+      if (file.size > 3 * 1024 * 1024) {
+        alert("Image trop lourde (max 3 Mo)");
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        avatarImg.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+
+      try {
+        var form = new FormData();
+        form.append("file", file);
+
+        var res = await fetch(
+          (typeof API_BASE !== "undefined" ? API_BASE : "") + "/auth/avatar",
+          {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("backstage_token"),
+            },
+            body: form,
+          }
+        );
+
+        var data = {};
+        try {
+          data = await res.json();
+        } catch (e) {}
+
+        if (!res.ok) {
+          var msg = data.detail || ("Erreur " + res.status);
+          if (typeof msg !== "string") msg = "Upload impossible";
+          throw new Error(msg);
+        }
+
+        if (data.avatar_url) {
+          avatarImg.src = mediaUrl(data.avatar_url);
+          try {
+            localStorage.setItem("backstage_fan_avatar", data.avatar_url);
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "Impossible d'enregistrer la photo sur le serveur.");
+      }
+    });
+  }
+
+  function setupFanNav() {
+    var token = localStorage.getItem("backstage_token");
+    var username = localStorage.getItem("backstage_username");
+    var role = localStorage.getItem("backstage_role");
+    var nav = document.getElementById("navLinks");
+    if (!nav) return;
+
+    if (token && username && role === "manager") {
+      nav.innerHTML =
+        '<a href="#artistes" class="plain">Artistes</a>' +
+        '<a href="manager-dashboard.html" class="plain">Dashboard</a>' +
+        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+    } else if (token && username && role === "admin") {
+      nav.innerHTML =
+        '<a href="#artistes" class="plain">Artistes</a>' +
+        '<a href="manager-dashboard.html" class="plain">Dashboard</a>' +
+        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+    } else if (token && username) {
+      nav.innerHTML =
+        '<a href="#artistes" class="plain">Artistes</a>' +
+        '<div class="msg-btn-wrap" id="msgBtnWrap">' +
+          '<button type="button" class="msg-btn" id="msgBtn">' +
+            'Messages <span class="msg-badge" id="msgBadge">0</span>' +
+          '</button>' +
+          '<div class="msg-panel" id="msgPanel">' +
+            '<div class="msg-panel-title">Vos conversations</div>' +
+            '<div id="fanInboxList">' +
+              '<div class="fan-inbox-empty">Chargement…</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="fan-profile">' +
+          '<div class="fan-avatar-wrap">' +
+            '<img id="fanAvatar" class="fan-avatar" src="" alt="Photo de profil">' +
+            '<label class="fan-avatar-upload" title="Importer une photo">' +
+              '📷' +
+              '<input type="file" id="fanAvatarInput" accept="image/jpeg,image/png,image/webp">' +
+            '</label>' +
+          '</div>' +
+          '<div class="fan-profile-info">' +
+            '<span class="fan-profile-name">Bonjour, ' + escapeHtml(username) + '</span>' +
+            '<label for="fanAvatarInput" class="fan-profile-upload-text">Importer une photo</label>' +
+          '</div>' +
+        '</div>' +
+        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+    } else {
+      nav.innerHTML =
+        '<a href="#artistes" class="plain">Artistes</a>' +
+        '<a href="login.html" class="plain">Se connecter</a>' +
+        '<a href="login.html?mode=register" class="btn primary">Rejoindre</a>';
+    }
+
+    var btn = document.getElementById("logoutBtn");
+    if (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (typeof logout === "function") logout();
+        else {
+          ["backstage_token", "backstage_email", "backstage_username", "backstage_role", "backstage_fan_avatar"].forEach(
+            function (k) {
+              localStorage.removeItem(k);
+            }
+          );
+          location.href = "login.html";
+        }
+      });
+    }
+
+    setupFanAvatarPreview();
+  }
+
+  async function loadFanInbox() {
+    var btn = document.getElementById("msgBtn");
+    var panel = document.getElementById("msgPanel");
+    var list = document.getElementById("fanInboxList");
+    var badge = document.getElementById("msgBadge");
+    if (!btn || !panel || !list || !badge) return;
+
+    var token = localStorage.getItem("backstage_token");
+    var role = localStorage.getItem("backstage_role");
+    if (!token || role === "manager" || role === "admin") return;
+
+    btn.onclick = function (e) {
+      e.stopPropagation();
+      panel.classList.toggle("show");
+    };
+    document.addEventListener("click", function (e) {
+      var wrap = document.getElementById("msgBtnWrap");
+      if (wrap && !wrap.contains(e.target)) {
+        panel.classList.remove("show");
+      }
+    });
+
+    try {
+      if (typeof api !== "function") throw new Error("api.js manquant");
+      var convs = await api("/conversations");
+
+      var totalUnread = 0;
+      if (convs && convs.length) {
+        convs.forEach(function (c) {
+          totalUnread += c.unread_count || 0;
+        });
+      }
+
+      if (totalUnread > 0) {
+        badge.textContent = totalUnread > 99 ? "99+" : String(totalUnread);
+        badge.classList.add("show");
+      } else {
+        badge.classList.remove("show");
+      }
+
+      if (!convs || !convs.length) {
+        list.innerHTML =
+          '<div class="fan-inbox-empty">Aucune conversation.<br>Écrivez à un artiste pour commencer.</div>';
+        return;
+      }
+
+      list.innerHTML = convs
+        .map(function (c) {
+          var last = c.last_message;
+          var snippet = "Conversation";
+          if (last) {
+            if (last.image_url) snippet = "📷 Photo";
+            else snippet = last.text || "Message";
+            if (last.sender_type === "manager") snippet = "artist : " + snippet;
+          }
+          var itemBadge =
+            c.unread_count > 0
+              ? '<span class="item-badge">' + c.unread_count + "</span>"
+              : "";
+
+          return (
+            '<div class="fan-inbox-item" data-artist="' +
+            escapeHtml(c.artist_id) +
+            '">' +
+            '<div class="av"></div>' +
+            '<div class="meta">' +
+            '<div class="aname">' +
+            escapeHtml(c.artist_name || "Artiste") +
+            "</div>" +
+            '<div class="snippet">' +
+            escapeHtml(snippet) +
+            "</div>" +
+            "</div>" +
+            itemBadge +
+            "</div>"
+          );
+        })
+        .join("");
+
+      list.querySelectorAll(".fan-inbox-item").forEach(function (el) {
+        el.addEventListener("click", function () {
+          var id = el.getAttribute("data-artist");
+          if (id) {
+            location.href = "fan-messages.html?id=" + encodeURIComponent(id);
+          }
+        });
+      });
+    } catch (err) {
+      console.warn(err);
+      list.innerHTML =
+        '<div class="fan-inbox-empty">Impossible de charger les messages.</div>';
+    }
+  }
+
+  function renderArtists(artists) {
+    var grid = document.getElementById("ticketGrid");
+    var heroEyebrow = document.getElementById("heroEyebrow");
+
+    if (!artists || !artists.length) {
+      grid.innerHTML =
+        '<div class="ticket-empty">Aucun artiste publié pour le moment.</div>';
+      return;
+    }
+
+    if (heroEyebrow) {
+      heroEyebrow.textContent =
+        "Plateforme officielle · " +
+        artists.length +
+        " artiste" +
+        (artists.length > 1 ? "s" : "");
+    }
+
+    grid.innerHTML = artists
+      .map(function (a) {
+        var name = a.name || "Artiste";
+        var cover = coverForArtist(a);
+        var genre = a.genre || "Artiste";
+        var tagline = a.bio_short || "";
+        var conv = a.conversation_count != null ? a.conversation_count : 0;
+        var href = "artist.html?id=" + encodeURIComponent(a.id);
+
+        return (
+          '<a href="' +
+          href +
+          '" class="ticket reveal">' +
+          '<div class="photo-wrap">' +
+          '<img src="' +
+          escapeHtml(cover) +
+          '" alt="' +
+          escapeHtml(name) +
+          '">' +
+          '<span class="genre-tag">' +
+          escapeHtml(genre) +
+          "</span>" +
+          "</div>" +
+          '<div class="body">' +
+          '<h3 class="name">' +
+          escapeHtml(name) +
+          "</h3>" +
+          '<p class="tagline">' +
+          escapeHtml(tagline) +
+          "</p>" +
+          '<div class="perf"></div>' +
+          '<div class="stats"><span>Conversations <b>' +
+          conv +
+          "</b></span></div>" +
+          '<span class="discover">Découvrir →</span>' +
+          "</div>" +
+          "</a>"
+        );
+      })
+      .join("");
+
+    observeReveals();
+  }
+
+  setupFanNav();
+  observeReveals();
+  loadFanInbox();
+
+  (async function () {
+    try {
+      if (typeof api !== "function") throw new Error("api.js manquant");
+      var artists = await api("/artists");
+      renderArtists(artists);
+    } catch (err) {
+      console.warn(err);
+      document.getElementById("ticketGrid").innerHTML =
+        '<div class="ticket-empty">Impossible de charger les artistes. Backend allumé ?</div>';
+    }
+  })();
+</script>
+</body>
+</html>

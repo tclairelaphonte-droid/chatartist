@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche artiste — Backstage Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff;--surface:#f6f6f8;--surface-2:#eeeef1;--border:#e7e7ec;
+  --ink:#17171b;--muted:#6e6e79;--red:#e11d3c;--red-dark:#b91530;
+  --blue:#2457e8;--blue-soft:rgba(36,87,232,.08);
+  --font-display:'Fraunces',serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --shadow-sm:0 2px 10px rgba(23,23,27,.05);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:1px solid var(--border);}
+.logo{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:18px;}
+.logo span{color:var(--red);font-style:normal;}
+.btn{font-family:var(--font-body);font-weight:600;font-size:13.5px;padding:10px 18px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--ink);cursor:pointer;}
+.btn:hover{border-color:var(--blue);color:var(--blue);}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.primary:hover{background:var(--red-dark);}
+.btn.ghost{background:var(--surface);}
+.btn:disabled{opacity:.55;cursor:not-allowed;}
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 100px;}
+.page-head{margin-bottom:24px;}
+.page-head .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;}
+.page-head h1{font-family:var(--font-display);font-size:clamp(24px,3vw,32px);margin:0 0 8px;font-weight:600;}
+.page-head p{color:var(--muted);margin:0;font-size:14.5px;line-height:1.5;}
+.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);margin-bottom:18px;}
+.card h2{font-family:var(--font-display);font-size:18px;margin:0 0 6px;font-weight:600;}
+.card .sub{font-size:12.5px;color:var(--muted);margin:0 0 16px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+input[type="text"],textarea{
+  width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:12px;
+  font-size:14px;font-family:inherit;background:var(--surface);margin-bottom:12px;
+}
+input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);background:#fff;}
+textarea{min-height:100px;resize:vertical;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:640px){.row2{grid-template-columns:1fr;}}
+.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:640px){.media-grid{grid-template-columns:1fr;}}
+.media-box{border:1px dashed var(--border);border-radius:14px;padding:14px;background:var(--surface);text-align:center;}
+.media-box img{width:100%;height:140px;object-fit:cover;border-radius:12px;background:var(--surface-2);margin-bottom:10px;display:block;}
+.media-box img.avatar{width:110px;height:110px;border-radius:50%;margin:0 auto 10px;}
+.media-box input[type="file"]{font-size:13px;width:100%;}
+.gallery-list{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.gallery-list .g-item{position:relative;width:88px;height:88px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.gallery-list .g-item img{width:100%;height:100%;object-fit:cover;}
+.gallery-list .g-item button{position:absolute;top:4px;right:4px;width:22px;height:22px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:12px;}
+.dyn-row{display:grid;grid-template-columns:1fr 120px 36px;gap:8px;margin-bottom:8px;align-items:start;}
+.dyn-row.news{grid-template-columns:140px 1fr 36px;}
+.dyn-row input{margin-bottom:0;}
+.dyn-row .rm{height:42px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;color:var(--muted);}
+.dyn-row .rm:hover{color:var(--red);border-color:var(--red);}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--border);}
+.toggle span{font-size:14px;font-weight:500;}
+.toggle small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px;}
+.footer-bar{position:sticky;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:14px 20px;display:flex;justify-content:flex-end;gap:10px;z-index:20;}
+.msg{display:none;margin-bottom:14px;padding:12px 14px;border-radius:12px;font-size:13.5px;}
+.msg.show{display:block;}
+.msg.err{background:#fde8ec;color:#b91530;}
+.msg.ok{background:#e8f7ef;color:#0f7a45;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="manager-dashboard.html" class="logo"><span>◆</span> Backstage</a>
+  <a class="btn" href="manager-dashboard.html">← Dashboard</a>
+</nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow" id="eyebrow">Manager · Fiche artiste</div>
+    <h1 id="pageTitle">Nouvel artiste</h1>
+    <p>Même structure que les pages publiques : biographie, galerie, musiques, clips et actualités. Les fans verront automatiquement cette mise en page.</p>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="card">
+    <h2>Identité</h2>
+    <p class="sub">Nom affiché sur la carte et la page profil</p>
+    <label for="name">Nom de l’artiste *</label>
+    <input type="text" id="name" required maxlength="120" placeholder="Nom de scène">
+    <div class="row2">
+      <div>
+        <label for="slug">Slug (optionnel)</label>
+        <input type="text" id="slug" maxlength="60" placeholder="mon-artiste">
+      </div>
+      <div>
+        <label for="genre">Genre</label>
+        <input type="text" id="genre" maxlength="120" placeholder="Pop · Rock · Country…">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Biographie</h2>
+    <p class="sub">Section « Parcours » sur la page publique</p>
+    <label for="bio_short">Bio courte</label>
+    <input type="text" id="bio_short" maxlength="300" placeholder="Une phrase pour la carte d’accueil">
+    <label for="bio_full">Bio complète (Parcours)</label>
+    <textarea id="bio_full" placeholder="Texte long de la biographie…"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Médias principaux</h2>
+    <p class="sub">Avatar et couverture — sans photo : placeholder neutre</p>
+    <div class="media-grid">
+      <div class="media-box">
+        <img class="avatar" id="avatarPreview" alt="Avatar">
+        <label for="avatarFile">Photo de profil</label>
+        <input type="file" id="avatarFile" accept="image/*">
+      </div>
+      <div class="media-box">
+        <img id="coverPreview" alt="Cover">
+        <label for="coverFile">Image de couverture</label>
+        <input type="file" id="coverFile" accept="image/*">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Galerie Photos</h2>
+    <p class="sub">Section « Photos » — vous pouvez ajouter plusieurs images</p>
+    <div class="gallery-list" id="galleryList"></div>
+    <label for="galleryFiles">Ajouter des photos</label>
+    <input type="file" id="galleryFiles" accept="image/*" multiple>
+  </div>
+
+  <div class="card">
+    <h2>Discographie — Musiques</h2>
+    <p class="sub">Section « Musiques »</p>
+    <div id="tracksList"></div>
+    <button type="button" class="btn ghost" id="btnAddTrack">+ Ajouter un titre</button>
+  </div>
+
+  <div class="card">
+    <h2>Vidéo — Clips</h2>
+    <p class="sub">Section « Clips »</p>
+    <div id="clipsList"></div>
+    <button type="button" class="btn ghost" id="btnAddClip">+ Ajouter un clip</button>
+  </div>
+
+  <div class="card">
+    <h2>Suivi — Actualités</h2>
+    <p class="sub">Section « Actualités »</p>
+    <div id="newsList"></div>
+    <button type="button" class="btn ghost" id="btnAddNews">+ Ajouter une actu</button>
+  </div>
+
+  <div class="card">
+    <h2>Publication</h2>
+    <label class="toggle">
+      <span>Publier sur la page d’accueil
+        <small>Décoché = visible seulement dans votre dashboard</small>
+      </span>
+      <input type="checkbox" id="is_published" checked>
+    </label>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <a class="btn" href="manager-dashboard.html">Annuler</a>
+  <button type="button" class="btn primary" id="btnSave">Enregistrer</button>
+</div>
+
+<script src="api.js"></script>
+<script>
+(function () {
+  const token = localStorage.getItem('backstage_token');
+  const role = localStorage.getItem('backstage_role');
+  // manager OU admin (sinon admin renvoyé vers login)
+  if (!token || (role !== 'manager' && role !== 'admin')) {
+    location.replace('login.html');
+    return;
+  }
+
+  const params = new URLSearchParams(location.search);
+  let artistId = params.get('id');
+  const isEdit = !!artistId;
+
+  const PLACEHOLDER =
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="#eeeef1" width="100%" height="100%"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#6e6e79" font-family="sans-serif" font-size="16">Pas de photo</text></svg>'
+    );
+
+  let galleryUrls = [];
+
+  function mediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (url.startsWith('assets/')) return url;
+    if (typeof API_BASE !== 'undefined') {
+      return url.startsWith('/') ? API_BASE + url : API_BASE + '/' + url;
+    }
+    return url;
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = 'msg show ' + (type || 'ok');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('avatarPreview').src = PLACEHOLDER;
+  document.getElementById('coverPreview').src = PLACEHOLDER;
+
+  document.getElementById('avatarFile').addEventListener('change', function () {
+    const f = this.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = function () { document.getElementById('avatarPreview').src = r.result; };
+    r.readAsDataURL(f);
+  });
+  document.getElementById('coverFile').addEventListener('change', function () {
+    const f = this.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = function () { document.getElementById('coverPreview').src = r.result; };
+    r.readAsDataURL(f);
+  });
+
+  function renderGallery() {
+    const box = document.getElementById('galleryList');
+    box.innerHTML = '';
+    galleryUrls.forEach(function (url, idx) {
+      const div = document.createElement('div');
+      div.className = 'g-item';
+      div.innerHTML = '<img src="' + mediaUrl(url) + '" alt=""><button type="button" title="Retirer">✕</button>';
+      div.querySelector('button').onclick = function () {
+        galleryUrls.splice(idx, 1);
+        renderGallery();
+      };
+      box.appendChild(div);
+    });
+  }
+
+  function addDynRow(containerId, kind, values) {
+    const list = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'dyn-row' + (kind === 'news' ? ' news' : '');
+    if (kind === 'news') {
+      row.innerHTML =
+        '<input type="text" class="c0" placeholder="Date (ex. 25 juil. 2026)" value="' + (values && values[0] ? values[0] : '') + '">' +
+        '<input type="text" class="c1" placeholder="Texte de l’actualité" value="' + (values && values[1] ? values[1] : '') + '">' +
+        '<button type="button" class="rm" title="Supprimer">✕</button>';
+    } else if (kind === 'track') {
+      row.innerHTML =
+        '<input type="text" class="c0" placeholder="Titre" value="' + (values && values[0] ? values[0] : '') + '">' +
+        '<input type="text" class="c1" placeholder="3:12" value="' + (values && values[1] ? values[1] : '') + '">' +
+        '<button type="button" class="rm" title="Supprimer">✕</button>';
+    } else {
+      row.innerHTML =
+        '<input type="text" class="c0" placeholder="Titre du clip" value="' + (values && values[0] ? values[0] : '') + '">' +
+        '<input type="text" class="c1" placeholder="ex. 12M vues" value="' + (values && values[1] ? values[1] : '') + '">' +
+        '<button type="button" class="rm" title="Supprimer">✕</button>';
+    }
+    row.querySelector('.rm').onclick = function () { row.remove(); };
+    list.appendChild(row);
+  }
+
+  function collectPairs(containerId) {
+    const rows = document.querySelectorAll('#' + containerId + ' .dyn-row');
+    const out = [];
+    rows.forEach(function (row) {
+      const a = (row.querySelector('.c0').value || '').trim();
+      const b = (row.querySelector('.c1').value || '').trim();
+      if (a || b) out.push([a, b]);
+    });
+    return out.length ? out : null;
+  }
+
+  document.getElementById('btnAddTrack').onclick = function () {
+    addDynRow('tracksList', 'track');
+  };
+  document.getElementById('btnAddClip').onclick = function () {
+    addDynRow('clipsList', 'clip');
+  };
+  document.getElementById('btnAddNews').onclick = function () {
+    addDynRow('newsList', 'news');
+  };
+
+  if (!isEdit) {
+    addDynRow('tracksList', 'track');
+    addDynRow('clipsList', 'clip');
+    addDynRow('newsList', 'news');
+  } else {
+    document.getElementById('pageTitle').textContent = 'Modifier l’artiste';
+    document.getElementById('eyebrow').textContent = 'Manager · Édition';
+  }
+
+  async function upload(kind, file, id) {
+    const form = new FormData();
+    form.append('file', file);
+    const headers = {
+      Authorization: 'Bearer ' + localStorage.getItem('backstage_token')
+    };
+    const actAs = sessionStorage.getItem('backstage_act_as_manager');
+    if (actAs) headers['X-Act-As-Manager'] = actAs;
+
+    const res = await fetch(API_BASE + '/manager/artists/' + id + '/' + kind, {
+      method: 'POST',
+      headers: headers,
+      body: form
+    });
+    const data = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      throw new Error(typeof data.detail === 'string' ? data.detail : 'Upload échoué (' + kind + ')');
+    }
+    return data;
+  }
+
+  async function loadArtist() {
+    if (!isEdit) return;
+    const list = await api('/manager/artists');
+    const a = list.find(function (x) { return x.id === artistId; });
+    if (!a) {
+      showMsg('Artiste introuvable ou non autorisé.', 'err');
+      return;
+    }
+    document.getElementById('name').value = a.name || '';
+    document.getElementById('slug').value = a.slug || '';
+    document.getElementById('genre').value = a.genre || '';
+    document.getElementById('bio_short').value = a.bio_short || '';
+    document.getElementById('bio_full').value = a.bio_full || '';
+    document.getElementById('is_published').checked = a.is_published !== false;
+    document.getElementById('avatarPreview').src = mediaUrl(a.avatar_url) || PLACEHOLDER;
+    document.getElementById('coverPreview').src = mediaUrl(a.cover_url) || PLACEHOLDER;
+    document.getElementById('pageTitle').textContent = a.name || 'Modifier l’artiste';
+
+    galleryUrls = Array.isArray(a.gallery) ? a.gallery.slice() : [];
+    renderGallery();
+
+    document.getElementById('tracksList').innerHTML = '';
+    document.getElementById('clipsList').innerHTML = '';
+    document.getElementById('newsList').innerHTML = '';
+    (a.tracks || []).forEach(function (t) { addDynRow('tracksList', 'track', t); });
+    (a.clips || []).forEach(function (t) { addDynRow('clipsList', 'clip', t); });
+    (a.news || []).forEach(function (t) { addDynRow('newsList', 'news', t); });
+    if (!(a.tracks || []).length) addDynRow('tracksList', 'track');
+    if (!(a.clips || []).length) addDynRow('clipsList', 'clip');
+    if (!(a.news || []).length) addDynRow('newsList', 'news');
+  }
+
+  document.getElementById('btnSave').onclick = async function () {
+    const btn = this;
+    const name = document.getElementById('name').value.trim();
+    if (!name) {
+      showMsg('Le nom est obligatoire.', 'err');
+      return;
+    }
+
+    const payload = {
+      name: name,
+      genre: document.getElementById('genre').value.trim() || null,
+      bio_short: document.getElementById('bio_short').value.trim() || null,
+      bio_full: document.getElementById('bio_full').value.trim() || null,
+      is_published: document.getElementById('is_published').checked,
+      tracks: collectPairs('tracksList'),
+      clips: collectPairs('clipsList'),
+      news: collectPairs('newsList'),
+      gallery: galleryUrls.length ? galleryUrls : null
+    };
+    const slug = document.getElementById('slug').value.trim();
+    if (slug) payload.slug = slug;
+
+    btn.disabled = true;
+    try {
+      let id = artistId;
+      if (isEdit) {
+        await api('/manager/artists/' + id, {
+          method: 'PATCH',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        const created = await api('/manager/artists', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        id = created.id;
+        artistId = id;
+      }
+
+      const av = document.getElementById('avatarFile').files[0];
+      const cv = document.getElementById('coverFile').files[0];
+      if (av) await upload('avatar', av, id);
+      if (cv) await upload('cover', cv, id);
+
+      const gFiles = document.getElementById('galleryFiles').files;
+      for (let i = 0; i < gFiles.length; i++) {
+        const res = await upload('gallery', gFiles[i], id);
+        if (res.url) galleryUrls.push(res.url);
+      }
+
+      if (gFiles.length) {
+        await api('/manager/artists/' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ gallery: galleryUrls })
+        });
+      }
+
+      showMsg('Fiche enregistrée. Redirection…', 'ok');
+      setTimeout(function () {
+        location.href = 'manager-dashboard.html';
+      }, 700);
+    } catch (err) {
+      showMsg(err.message || 'Erreur lors de l’enregistrement', 'err');
+      btn.disabled = false;
+    }
+  };
+
+  loadArtist().catch(function (e) {
+    showMsg(e.message || 'Chargement impossible', 'err');
+  });
+})();
+</script>
+</body>
+</html>

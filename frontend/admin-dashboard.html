@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Backstage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff;--surface:#f6f6f8;--surface-2:#eeeef1;--border:#e7e7ec;
+  --ink:#17171b;--muted:#6e6e79;--red:#e11d3c;--red-dark:#b91530;--red-soft:rgba(225,29,60,.08);
+  --blue:#2457e8;--blue-soft:rgba(36,87,232,.08);--green:#1a9c5e;--green-soft:rgba(26,156,94,.1);
+  --font-display:'Fraunces',serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);min-height:100vh;display:flex;flex-direction:column;}
+a{color:inherit;text-decoration:none;}
+nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.logo{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:18px;}
+.logo span{color:var(--red);font-style:normal;}
+.nav-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.who{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+.who b{color:var(--ink);}
+.btn{font-family:var(--font-body);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--ink);}
+.btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
+.btn.danger{border-color:var(--red);color:var(--red);}
+.btn.danger:hover{background:var(--red-soft);}
+.btn.ok{border-color:var(--green);color:var(--green);}
+.btn.ok:hover{background:var(--green-soft);}
+.btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
+.btn.primary:hover{background:var(--red-dark);}
+main{flex:1;padding:20px 16px 40px;max-width:900px;width:100%;margin:0 auto;}
+h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600;}
+.lead{color:var(--muted);font-size:14px;margin:0 0 24px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+.card h2{margin:0;font-size:16px;font-weight:600;}
+.meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:4px;word-break:break-all;}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:999px;margin-top:8px;}
+.badge.on{background:var(--green-soft);color:var(--green);}
+.badge.off{background:var(--red-soft);color:var(--red);}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.artists{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none;}
+.artists.show{display:block;}
+.artists li{font-size:13px;color:var(--muted);margin:4px 0;}
+.empty,.err{text-align:center;padding:40px 16px;color:var(--muted);font-family:var(--font-mono);font-size:13px;}
+.err{color:var(--red);}
+@media(min-width:640px){
+  nav{padding:16px 28px;}
+  main{padding:28px 24px 48px;}
+  h1{font-size:30px;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo"><span>◆</span> Backstage Admin</span>
+  <div class="nav-right">
+    <span class="who">Connecté : <b id="who">—</b></span>
+    <a class="btn" href="manager-dashboard.html">Mon espace artistes</a>
+    <button type="button" class="btn" id="logoutBtn">Se déconnecter</button>
+  </div>
+</nav>
+<main>
+  <h1>Managers clients</h1>
+  <p class="lead">Bloquez un compte en cas d’infraction. Débloquez après régularisation. Fonctionne aussi sur téléphone.</p>
+  <div id="list"><div class="empty">Chargement…</div></div>
+</main>
+<script src="api.js"></script>
+<script>
+(function () {
+  var token = localStorage.getItem('backstage_token');
+  var role = localStorage.getItem('backstage_role');
+  if (!token || role !== 'admin') {
+    location.replace('login.html');
+    return;
+  }
+
+  document.getElementById('who').textContent =
+    localStorage.getItem('backstage_username') || localStorage.getItem('backstage_email') || 'Admin';
+
+  document.getElementById('logoutBtn').onclick = function () {
+    if (typeof logout === 'function') logout();
+    else {
+      ['backstage_token','backstage_email','backstage_username','backstage_role'].forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+      location.href = 'login.html';
+    }
+  };
+
+  var listEl = document.getElementById('list');
+
+  async function load() {
+    listEl.innerHTML = '<div class="empty">Chargement…</div>';
+    try {
+      var managers = await api('/admin/managers');
+      if (!managers.length) {
+        listEl.innerHTML = '<div class="empty">Aucun manager client.</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      managers.forEach(function (m) {
+        var card = document.createElement('div');
+        card.className = 'card';
+        var blocked = !!m.is_blocked;
+        card.innerHTML =
+          '<div class="card-top">' +
+            '<div>' +
+              '<h2>' + (m.username || '') + '</h2>' +
+              '<div class="meta">' + (m.email || '') + '</div>' +
+              '<div class="meta">' + (m.artist_count || 0) + ' artiste(s)</div>' +
+              '<span class="badge ' + (blocked ? 'off' : 'on') + '">' +
+                (blocked ? 'Bloqué' : 'Actif') +
+              '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="actions">' +
+            '<button type="button" class="btn" data-art="1">Voir artistes</button>' +
+            (blocked
+              ? '<button type="button" class="btn ok" data-un="1">Débloquer</button>'
+              : '<button type="button" class="btn danger" data-bl="1">Bloquer</button>') +
+          '</div>' +
+          '<ul class="artists" data-box="1"></ul>';
+
+        var box = card.querySelector('[data-box]');
+
+        card.querySelector('[data-art]').onclick = async function () {
+          if (box.classList.contains('show') && box.dataset.loaded) {
+            box.classList.toggle('show');
+            return;
+          }
+          box.innerHTML = '<li>Chargement…</li>';
+          box.classList.add('show');
+          try {
+            var arts = await api('/admin/managers/' + encodeURIComponent(m.id) + '/artists');
+            if (!arts.length) {
+              box.innerHTML = '<li>Aucun artiste</li>';
+            } else {
+              box.innerHTML = arts.map(function (a) {
+                return '<li>' + (a.name || '') + (a.is_published ? '' : ' (brouillon)') + '</li>';
+              }).join('');
+            }
+            box.dataset.loaded = '1';
+          } catch (err) {
+            box.innerHTML = '<li style="color:var(--red)">' + (err.message || 'Erreur') + '</li>';
+          }
+        };
+
+        var bl = card.querySelector('[data-bl]');
+        if (bl) {
+          bl.onclick = async function () {
+            if (!confirm('Bloquer ' + m.email + ' ? Il ne pourra plus se connecter.')) return;
+            try {
+              await api('/admin/managers/' + encodeURIComponent(m.id) + '/block', { method: 'POST' });
+              await load();
+            } catch (err) {
+              alert(err.message || 'Erreur');
+            }
+          };
+        }
+
+        var un = card.querySelector('[data-un]');
+        if (un) {
+          un.onclick = async function () {
+            try {
+              await api('/admin/managers/' + encodeURIComponent(m.id) + '/unblock', { method: 'POST' });
+              await load();
+            } catch (err) {
+              alert(err.message || 'Erreur');
+            }
+          };
+        }
+
+        listEl.appendChild(card);
+      });
+    } catch (err) {
+      listEl.innerHTML = '<div class="err">' + (err.message || err) + '</div>';
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

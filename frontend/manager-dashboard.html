@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tableau de bord — Backstage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--surface:#f6f6f8;--surface-2:#eeeef1;--border:#e7e7ec;--ink:#17171b;--muted:#6e6e79;--red:#e11d3c;--red-dark:#b91530;--red-soft:rgba(225,29,60,.08);--blue:#2457e8;--blue-soft:rgba(36,87,232,.08);--green:#1a9c5e;--green-soft:rgba(26,156,94,.1);--font-display:'Fraunces',serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;--shadow-sm:0 2px 10px rgba(23,23,27,.05);}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);display:flex;flex-direction:column;}
+a{color:inherit;text-decoration:none;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;flex-wrap:wrap;}
+.logo{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:18px;}
+.logo span{color:var(--red);font-style:normal;}
+.who{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);}
+.who b{color:var(--ink);font-weight:600;}
+.logout-btn,.nav-btn{font-family:var(--font-body);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--ink);cursor:pointer;transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.nav-btn:hover,.nav-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
+.nav-btn.admin-btn{border-color:var(--ink);background:var(--ink);color:#fff;}
+.nav-btn.admin-btn:hover{background:#2a2a30;border-color:#2a2a30;color:#fff;}
+#superviseBar{display:none;background:#17171b;color:#fff;padding:10px 16px;font-size:13px;text-align:center;flex-shrink:0;}
+#superviseBar button{margin-left:10px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;cursor:pointer;font-weight:600;font-size:12px;}
+#managersOverlay{display:none;position:fixed;inset:0;background:rgba(23,23,27,.45);z-index:80;opacity:0;transition:opacity .25s;}
+#managersPanel{position:fixed;top:0;right:0;width:min(400px,100%);height:100%;background:#fff;z-index:90;box-shadow:-12px 0 40px rgba(0,0,0,.14);transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column;}
+.mp-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.mp-head .t{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.mp-head .h{font-weight:600;font-size:16px;margin-top:4px;}
+.mp-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:18px;}
+#managersList{flex:1;overflow-y:auto;padding:12px;}
+.m-card{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;background:var(--surface);}
+.m-card .n{font-weight:600;}
+.m-card .e{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:4px;word-break:break-all;}
+.m-card .s{font-size:12px;margin-top:6px;color:var(--muted);}
+.m-card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.layout{flex:1;display:grid;grid-template-columns:280px 340px 1fr;min-height:0;}
+.sidebar{border-right:1px solid var(--border);padding:22px 18px;overflow-y:auto;background:var(--surface);}
+.sidebar .eyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 8px 12px;}
+.artist-item{display:flex;align-items:center;gap:8px;padding:12px 10px;border-radius:12px;cursor:pointer;border:1px solid transparent;margin-bottom:6px;transition:all .15s;background:#fff;}
+.artist-item:hover{border-color:var(--border);}
+.artist-item.active{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.artist-item .dot{width:36px;height:36px;border-radius:10px;flex-shrink:0;object-fit:cover;border:1px solid var(--border);background:var(--surface-2);}
+.artist-item .info{flex:1;min-width:0;}
+.artist-item .aname{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;}
+.artist-item .aname > span:first-child{overflow:hidden;text-overflow:ellipsis;}
+.artist-item .acount{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);}
+.artist-item .unread-badge{background:var(--red);color:#fff;font-family:var(--font-mono);font-size:10px;border-radius:999px;padding:1px 7px;flex-shrink:0;}
+.artist-item .actions{display:flex;gap:4px;flex-shrink:0;}
+.artist-item .edit-btn{flex-shrink:0;width:28px;height:28px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.artist-item .edit-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
+.artist-item .edit-btn[data-del]:hover{border-color:var(--red);color:var(--red);background:var(--red-soft);}
+.conv-list{border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+.conv-list .head{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.conv-list .head h2{font-family:var(--font-display);font-size:19px;margin:0 0 8px;font-weight:600;}
+.conv-list .head span{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+.search-box{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:13.5px;margin-top:10px;font-family:var(--font-body);}
+.search-box:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.conv-items{flex:1;overflow-y:auto;}
+.conv-item{display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;align-items:center;}
+.conv-item:hover{background:var(--surface);}
+.conv-item.active{background:var(--blue-soft);}
+.conv-item.pinned{background:linear-gradient(90deg,rgba(36,87,232,.06),transparent);}
+.conv-item .avatar-wrap{position:relative;flex-shrink:0;}
+.conv-item .avatar{width:38px;height:38px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);object-fit:cover;display:block;}
+.conv-item .meta{flex:1;min-width:0;}
+.conv-item .top-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.conv-item .fname{font-size:13.5px;font-weight:600;}
+.conv-item .pin-icon{font-size:11px;margin-right:4px;}
+.conv-item .time{font-family:var(--font-mono);font-size:10px;color:var(--muted);flex-shrink:0;}
+.conv-item .snippet{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;}
+.badge{background:var(--red);color:#fff;font-family:var(--font-mono);font-size:10px;border-radius:999px;padding:1px 7px;margin-left:6px;}
+.conv-actions{display:flex;gap:2px;flex-shrink:0;opacity:0;transition:opacity .15s;}
+.conv-item:hover .conv-actions{opacity:1;}
+.conv-actions button{width:26px;height:26px;border:none;border-radius:6px;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.conv-actions button:hover{background:var(--surface-2);color:var(--ink);}
+.conv-actions button.danger:hover{background:var(--red-soft);color:var(--red);}
+.thread{display:flex;flex-direction:column;min-height:0;}
+.thread-header{display:flex;align-items:center;gap:12px;padding:18px 28px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.thread-header .avatar-wrap{position:relative;flex-shrink:0;}
+.thread-header .avatar{width:40px;height:40px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);object-fit:cover;display:block;}
+.thread-header .name{font-weight:600;font-size:14.5px;}
+.thread-header .sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+.thread-header .header-actions{margin-left:auto;display:flex;gap:6px;}
+.thread-header .header-actions button{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:var(--font-mono);color:var(--muted);}
+.thread-header .header-actions button:hover{border-color:var(--blue);color:var(--blue);}
+.chat-area{flex:1;overflow-y:auto;padding:24px 28px;display:flex;flex-direction:column;gap:12px;background:var(--surface);min-height:0;}
+.bubble-row{display:flex;position:relative;}
+.bubble-row.mine{justify-content:flex-end;}
+.bubble{max-width:66%;padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.5;box-shadow:var(--shadow-sm);position:relative;}
+.bubble-row:not(.mine) .bubble{background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;}
+.bubble-row.mine .bubble{background:var(--red);color:#fff;border-bottom-right-radius:4px;}
+.bubble .time{display:inline-block;font-family:var(--font-mono);font-size:9.5px;margin-top:5px;opacity:.7;}
+.bubble.has-image{padding:6px;overflow:hidden;}
+.bubble.has-image img{display:block;width:100%;max-width:240px;border-radius:10px;cursor:zoom-in;}
+.bubble.sticker-msg{background:transparent!important;border:none!important;box-shadow:none!important;font-size:48px;padding:4px;line-height:1;}
+.bubble.sticker-msg .time{font-size:9.5px;color:var(--muted);display:block;margin-top:4px;}
+.reactions{display:flex;gap:2px;margin-top:4px;flex-wrap:wrap;}
+.reaction-chip{background:rgba(0,0,0,.06);border-radius:999px;padding:1px 6px;font-size:12px;cursor:default;}
+.bubble-row.mine .reaction-chip{background:rgba(255,255,255,.25);}
+.react-btn{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;opacity:0;display:flex;align-items:center;justify-content:center;}
+.bubble-row:hover .react-btn{opacity:1;}
+.bubble-row.mine .react-btn{right:auto;left:-8px;}
+.typing-row{display:none;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11.5px;color:var(--muted);padding:4px 0;}
+.typing-row.show{display:flex;}
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);margin:0 1px;animation:tb 1.2s infinite ease-in-out;}
+.typing-dots span:nth-child(2){animation-delay:.15s;}
+.typing-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-3px);opacity:1}}
+.composer{border-top:1px solid var(--border);padding:12px 28px 18px;background:#fff;position:relative;flex-shrink:0;}
+.composer form{display:flex;gap:8px;align-items:center;}
+.composer input[type="text"]{flex:1;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-family:var(--font-body);}
+.composer input[type="text"]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft);}
+.icon-btn{width:40px;height:40px;flex-shrink:0;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
+.icon-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
+.composer button[type="submit"]{padding:0 18px;border-radius:10px;border:1px solid var(--red);background:var(--red);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;flex-shrink:0;height:40px;}
+.composer button[type="submit"]:hover{background:var(--red-dark);}
+.preview-strip{margin-bottom:10px;display:none;}
+.preview-strip.show{display:flex;}
+.preview-chip{position:relative;width:56px;height:56px;border-radius:9px;overflow:hidden;border:1px solid var(--border);}
+.preview-chip img{width:100%;height:100%;object-fit:cover;}
+.preview-chip .remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(23,23,27,.7);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.sticker-panel{display:none;position:absolute;bottom:100%;left:28px;right:28px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.1);margin-bottom:8px;max-height:180px;overflow-y:auto;}
+.sticker-panel.show{display:block;}
+.sticker-panel .sticker-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.sticker-panel .sticker-grid button{width:42px;height:42px;border:none;background:var(--surface);border-radius:10px;font-size:24px;cursor:pointer;}
+.sticker-panel .sticker-grid button:hover{background:var(--blue-soft);}
+.react-panel{display:none;position:absolute;z-index:20;background:#fff;border:1px solid var(--border);border-radius:999px;padding:4px 8px;box-shadow:var(--shadow-sm);gap:4px;}
+.react-panel.show{display:flex;}
+.react-panel button{border:none;background:transparent;font-size:18px;cursor:pointer;padding:2px 4px;}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--font-mono);font-size:12.5px;text-align:center;padding:40px;background:var(--surface);}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(23,23,27,.85);z-index:100;align-items:center;justify-content:center;padding:40px;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:12px;}
+.mobile-back{display:none;font-family:var(--font-mono);font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;margin-right:8px;}
+
+html{height:100%;height:100dvh;overflow:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{min-height:100%;min-height:100dvh;height:100dvh;overflow:hidden;overscroll-behavior:none;}
+.layout{min-height:0;}
+.chat-area{min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.composer{flex-shrink:0;min-width:0;z-index:10;}
+.composer input[type="text"]{font-size:16px !important;}
+
+@media (max-width: 960px) {
+  nav{padding:10px 14px;min-height:52px;}
+  .logo{font-size:16px;}
+  .who{display:none;}
+  .nav-btn,.logout-btn{font-size:12px;padding:7px 12px;}
+  .layout{grid-template-columns:1fr;position:relative;}
+  .sidebar,.conv-list,.thread{display:none;position:absolute;inset:0;width:100%;height:100%;background:var(--bg);z-index:10;overflow:hidden;}
+  .sidebar.show,.conv-list.show,.thread.show{display:flex;flex-direction:column;}
+  .sidebar{overflow-y:auto;}
+  .conv-list{overflow:hidden;}
+  .conv-items{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .mobile-back{display:inline-block;}
+  .conv-actions{opacity:1;}
+  .thread-header{padding:10px 14px;gap:10px;min-height:60px;}
+  .thread-header .avatar{width:36px;height:36px;border-radius:10px;}
+  .thread-header .name{font-size:14px;}
+  .thread-header .sub{font-size:10px;}
+  .thread-header .header-actions button{padding:5px 8px;font-size:11px;}
+  .chat-area{padding:14px 12px;gap:10px;}
+  .bubble{max-width:84%;padding:10px 13px;font-size:15px;line-height:1.45;border-radius:15px;}
+  .bubble .time{font-size:9px;}
+  .bubble.has-image img{max-width:min(240px,72vw);}
+  .bubble.sticker-msg{font-size:42px;}
+  .composer{padding:8px 10px max(10px, env(safe-area-inset-bottom));}
+  .composer form{width:100%;gap:6px;}
+  .icon-btn{width:42px;height:42px;min-width:42px;border-radius:11px;font-size:18px;}
+  .composer input[type="text"]{min-width:0;flex:1 1 auto;height:42px;padding:9px 11px;font-size:16px !important;line-height:1.2;border-radius:11px;}
+  .composer button[type="submit"]{height:42px;min-width:70px;padding:0 12px;border-radius:11px;font-size:13px;}
+  .preview-strip{margin-bottom:7px;}
+  .preview-chip{width:52px;height:52px;}
+  .sticker-panel{left:10px;right:10px;bottom:calc(100% + 5px);max-height:190px;padding:9px;border-radius:13px;}
+  .sticker-panel .sticker-grid button{width:38px;height:38px;font-size:21px;border-radius:9px;}
+  .lightbox{padding:15px;}
+  .lightbox img{max-width:94vw;max-height:82vh;border-radius:10px;}
+}
+@media (max-width: 380px) {
+  nav{padding-left:10px;padding-right:10px;}
+  .nav-btn,.logout-btn{font-size:11px;padding:6px 10px;}
+  .chat-area{padding-left:9px;padding-right:9px;}
+  .bubble{max-width:88%;}
+  .composer{padding-left:7px;padding-right:7px;}
+  .composer form{gap:4px;}
+  .icon-btn{width:39px;min-width:39px;height:40px;}
+  .composer input[type="text"]{height:40px;padding-left:9px;padding-right:9px;}
+  .composer button[type="submit"]{height:40px;min-width:64px;padding-left:8px;padding-right:8px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo"><span>◆</span> Backstage</span>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <button class="nav-btn admin-btn" id="btnManagers" style="display:none;">Gestion des managers</button>
+    <button class="nav-btn" id="btnInbox">Messages</button>
+    <button class="nav-btn" id="btnTrash">Corbeille</button>
+    <button class="nav-btn" id="btnBlocked">Bloqués</button>
+    <span class="who">Connecté en tant que <b id="managerName">Manager</b></span>
+    <button class="logout-btn" id="logoutBtn">Se déconnecter</button>
+  </div>
+</nav>
+
+<div id="superviseBar">
+  <span id="superviseLabel">Supervision d’un manager client</span>
+  <button type="button" id="btnBackAdmin">← Retour au dashboard Admin</button>
+</div>
+
+<div id="managersOverlay"></div>
+<aside id="managersPanel">
+  <div class="mp-head">
+    <div>
+      <div class="t">Administration</div>
+      <div class="h">Managers clients</div>
+    </div>
+    <button type="button" class="mp-close" id="btnCloseManagers" aria-label="Fermer">×</button>
+  </div>
+  <div id="managersList"></div>
+</aside>
+
+<div class="layout">
+  <aside class="sidebar show" id="sidebar">
+    <div class="eyebrow">Artistes</div>
+    <div id="artistList"></div>
+    <button type="button" class="nav-btn" id="btnAddArtist" style="width:100%;margin-top:12px;">+ Ajouter un artiste</button>
+  </aside>
+  <section class="conv-list" id="convList">
+    <div class="head">
+      <button class="mobile-back" id="backToArtists">← Artistes</button>
+      <h2 id="convTitle">Conversations</h2>
+      <span id="convSub">—</span>
+      <input type="search" class="search-box" id="searchBox" placeholder="Rechercher un fan…">
+    </div>
+    <div class="conv-items" id="convItems"></div>
+  </section>
+  <section class="thread" id="thread">
+    <div class="empty">Sélectionnez une conversation pour l'ouvrir.</div>
+  </section>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" src="" alt=""></div>
+
+<script src="api.js"></script>
+<script>
+const token = localStorage.getItem('backstage_token');
+const role = localStorage.getItem('backstage_role');
+if (!token || (role !== 'manager' && role !== 'admin')) location.replace('login.html');
+
+document.getElementById('managerName').textContent = localStorage.getItem('backstage_username') || 'Manager';
+document.getElementById('logoutBtn').onclick = function () {
+  if (typeof logout === 'function') logout();
+  else {
+    ['backstage_token','backstage_email','backstage_username','backstage_role'].forEach(function (k) { localStorage.removeItem(k); });
+    sessionStorage.removeItem('backstage_act_as_manager');
+    sessionStorage.removeItem('backstage_act_as_label');
+    location.href = 'login.html';
+  }
+};
+
+(function setupAdminUI() {
+  var btnManagers = document.getElementById('btnManagers');
+  var overlay = document.getElementById('managersOverlay');
+  var panel = document.getElementById('managersPanel');
+  var superviseBar = document.getElementById('superviseBar');
+  var actAs = sessionStorage.getItem('backstage_act_as_manager');
+
+  if (role === 'admin' && !actAs) {
+    btnManagers.style.display = '';
+  }
+
+  if (role === 'admin' && actAs) {
+    superviseBar.style.display = 'block';
+    var lab = sessionStorage.getItem('backstage_act_as_label') || 'manager client';
+    document.getElementById('superviseLabel').textContent =
+      'Vous consultez le dashboard de « ' + lab + ' »';
+    btnManagers.style.display = 'none';
+    document.getElementById('btnBackAdmin').onclick = function () {
+      sessionStorage.removeItem('backstage_act_as_manager');
+      sessionStorage.removeItem('backstage_act_as_label');
+      location.href = 'manager-dashboard.html';
+    };
+  }
+
+  function openManagersPanel() {
+    overlay.style.display = 'block';
+    requestAnimationFrame(function () {
+      overlay.style.opacity = '1';
+      panel.style.transform = 'translateX(0)';
+    });
+    loadManagersPanel();
+  }
+  function closeManagersPanel() {
+    overlay.style.opacity = '0';
+    panel.style.transform = 'translateX(100%)';
+    setTimeout(function () { overlay.style.display = 'none'; }, 280);
+  }
+
+  btnManagers.onclick = openManagersPanel;
+  document.getElementById('btnCloseManagers').onclick = closeManagersPanel;
+  overlay.onclick = closeManagersPanel;
+
+  async function loadManagersPanel() {
+    var box = document.getElementById('managersList');
+    box.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;">Chargement…</div>';
+    try {
+      var managers = await api('/admin/managers');
+      if (!managers.length) {
+        box.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;">Aucun manager client.</div>';
+        return;
+      }
+      box.innerHTML = '';
+      managers.forEach(function (m) {
+        var el = document.createElement('div');
+        el.className = 'm-card';
+        var blocked = !!m.is_blocked;
+        el.innerHTML =
+          '<div class="n">' + (m.username || '') + '</div>' +
+          '<div class="e">' + (m.email || '') + '</div>' +
+          '<div class="s">' + (m.artist_count || 0) + ' artiste(s) · ' +
+            '<span style="color:' + (blocked ? 'var(--red)' : 'var(--green)') + ';">' +
+            (blocked ? 'Bloqué' : 'Actif') + '</span></div>' +
+          '<div class="acts">' +
+            '<button type="button" class="nav-btn" data-enter="1">Ouvrir son dashboard</button>' +
+            (blocked
+              ? '<button type="button" class="nav-btn" data-un="1">Débloquer</button>'
+              : '<button type="button" class="nav-btn" data-bl="1">Bloquer</button>') +
+          '</div>';
+        el.querySelector('[data-enter]').onclick = function () {
+          sessionStorage.setItem('backstage_act_as_manager', m.id);
+          sessionStorage.setItem('backstage_act_as_label', m.username || m.email);
+          location.href = 'manager-dashboard.html';
+        };
+        var bl = el.querySelector('[data-bl]');
+        if (bl) {
+          bl.onclick = async function () {
+            if (!confirm('Bloquer ' + m.email + ' ? Il ne pourra plus se connecter.')) return;
+            try {
+              await api('/admin/managers/' + encodeURIComponent(m.id) + '/block', { method: 'POST' });
+              loadManagersPanel();
+            } catch (err) { alert(err.message || 'Erreur'); }
+          };
+        }
+        var un = el.querySelector('[data-un]');
+        if (un) {
+          un.onclick = async function () {
+            try {
+              await api('/admin/managers/' + encodeURIComponent(m.id) + '/unblock', { method: 'POST' });
+              loadManagersPanel();
+            } catch (err) { alert(err.message || 'Erreur'); }
+          };
+        }
+        box.appendChild(el);
+      });
+    } catch (err) {
+      box.innerHTML = '<div style="padding:20px;color:var(--red);font-size:12px;">' + (err.message || err) + '</div>';
+    }
+  }
+})();
+
+const STICKERS = ['😀','😁','😄','😃','😊','😉','😍','🥰','😘','🤩','😎','🥳','🤗','🤔','😭','😂','🤣','😅','😮','😱','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💖','💗','💓','💞','💘','❣️','💝','👍','👎','👏','🙌','👌','🤝','🙏','💪','🤘','✌️','👊','🤜','🤛','🫶','🔥','⚡','✨','💥','💫','🌟','⭐','🎉','🎊','🚀','💯','🎵','🎶','🎤','🎧','🎸','🥁','🎹','🎼','📀','💿','🎬','🎟️','🎫','🎪','🎆','🎇','📸','🎥','🌹','🌺','🌷','🌻','🌼','💐','🎁','🍫','💍','👑','☀️','🌙','⭐','🌈','🍀','🦋','🐻','🐼','🦄'];
+const REACT_EMOJIS = ['❤️','👍','👏','🔥','😂','😍','🥰','🤩','😮','😭','💯','🎉','🙌','🤘','💜','👑'];
+
+function getJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+  catch (e) { return fallback; }
+}
+function setJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function getBlocked() { return getJSON('backstage_blocked', []); }
+function setBlocked(a) { setJSON('backstage_blocked', a); }
+function getPinned() { return getJSON('backstage_pinned', {}); }
+function setPinned(p) { setJSON('backstage_pinned', p); }
+
+function getSeenMsgIds() {
+  return getJSON('backstage_seen_msg_ids', []);
+}
+function markMessagesSeen(ids) {
+  if (!ids || !ids.length) return;
+  var set = {};
+  getSeenMsgIds().forEach(function (id) { set[id] = true; });
+  ids.forEach(function (id) { if (id != null) set[String(id)] = true; });
+  var arr = Object.keys(set);
+  if (arr.length > 8000) arr = arr.slice(-6000);
+  setJSON('backstage_seen_msg_ids', arr);
+}
+function isMsgSeen(id) {
+  if (id == null) return true;
+  return getSeenMsgIds().indexOf(String(id)) !== -1;
+}
+
+function formatTime(iso) {
+  try {
+    var d = new Date(iso);
+    return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+  } catch (e) { return ''; }
+}
+function resolveImageUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/uploads') || url.startsWith('uploads/')) {
+    var path = url.startsWith('/') ? url : '/' + url;
+    path = path.replace(/^\/uploads/, '/files');
+    return (typeof API_BASE !== 'undefined' ? API_BASE : '') + path;
+  }
+  if (url.startsWith('assets/') || url.startsWith('./assets/')) return url;
+  if (url.startsWith('/') && typeof API_BASE !== 'undefined') return API_BASE + url;
+  return url;
+}
+function isStickerText(text) {
+  if (!text) return false;
+  var t = text.trim();
+  return t.length <= 8 && STICKERS.indexOf(t) !== -1;
+}
+
+function fanAvatarUrl(c) {
+  if (!c) return '';
+  var url = c.fan_avatar_url || c.avatar_url || (c.fan && (c.fan.avatar_url || c.fan.fan_avatar_url)) || '';
+  return url ? resolveImageUrl(url) : '';
+}
+
+function fanAvatarHtml(c) {
+  var url = fanAvatarUrl(c);
+  if (url) return '<img class="avatar" src="' + url + '" alt="">';
+  return '<div class="avatar"></div>';
+}
+
+function playNotif() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    o.start(); o.stop(ctx.currentTime + 0.3);
+  } catch (e) {}
+}
+
+function ensureNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().catch(function () {});
+  }
+}
+
+function notifyNewFanMessages(newFanMessages, fanName) {
+  if (!newFanMessages || !newFanMessages.length) return;
+  playNotif();
+  if ('Notification' in window && Notification.permission === 'granted') {
+    var count = newFanMessages.length;
+    var title = count === 1
+      ? ('Nouveau message de ' + (fanName || 'fan'))
+      : (count + ' nouveaux messages de ' + (fanName || 'fan'));
+    var body = '';
+    var last = newFanMessages[newFanMessages.length - 1];
+    if (last) {
+      if (last.image_url) body = '📷 Photo';
+      else if (last.text) body = last.text.length > 80 ? last.text.slice(0, 80) + '…' : last.text;
+      else body = 'Nouveau message';
+    }
+    try {
+      new Notification(title, {
+        body: body,
+        tag: 'backstage-msg-' + (last && last.id ? last.id : Date.now()),
+        renotify: true
+      });
+    } catch (e) {}
+  }
+  markMessagesSeen(newFanMessages.map(function (m) { return m.id; }));
+}
+
+var viewMode = 'inbox';
+var artists = [];
+var currentArtistId = null;
+var currentConversationId = null;
+var currentFanName = null;
+var currentMessages = [];
+var lastMsgCount = 0;
+var reactionsMap = {};
+var conversationsCache = [];
+
+var artistListEl = document.getElementById('artistList');
+var convItemsEl = document.getElementById('convItems');
+var convTitle = document.getElementById('convTitle');
+var convSub = document.getElementById('convSub');
+var threadEl = document.getElementById('thread');
+var sidebarEl = document.getElementById('sidebar');
+var convListEl = document.getElementById('convList');
+var searchBox = document.getElementById('searchBox');
+
+function isMobile() { return window.innerWidth <= 960; }
+function showPanel(p) {
+  if (!isMobile()) return;
+  [sidebarEl, convListEl, threadEl].forEach(function (el) { el.classList.remove('show'); });
+  p.classList.add('show');
+}
+
+async function loadArtists() {
+  artists = await api('/manager/artists');
+  if (!artists.length) {
+    artistListEl.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;">Aucun artiste — créez-en un ci-dessous.</div>';
+    currentArtistId = null;
+    conversationsCache = [];
+    renderConversations();
+    return;
+  }
+  if (!currentArtistId || !artists.find(function (a) { return a.id === currentArtistId; })) {
+    currentArtistId = artists[0].id;
+  }
+  renderArtists();
+  await loadConversations(currentArtistId);
+}
+
+function renderArtists() {
+  artistListEl.innerHTML = '';
+  artists.forEach(function (a) {
+    var el = document.createElement('div');
+    el.className = 'artist-item' + (a.id === currentArtistId ? ' active' : '');
+    var avatar = a.avatar_url ? resolveImageUrl(a.avatar_url) : '';
+    var unread = a.unread_count || 0;
+    var status = a.is_published ? 'Publié' : 'Brouillon';
+    if (unread > 0) {
+      status = unread + ' non lu' + (unread > 1 ? 's' : '');
+    }
+    var badge =
+      unread > 0
+        ? '<span class="unread-badge">' + unread + '</span>'
+        : '';
+
+    el.innerHTML =
+      '<img class="dot" src="' + avatar + '" alt="">' +
+      '<div class="info">' +
+        '<div class="aname"><span>' + (a.name || '') + '</span>' + badge + '</div>' +
+        '<div class="acount">' + status + '</div>' +
+      '</div>' +
+      '<div class="actions">' +
+        '<button type="button" class="edit-btn" title="Voir la page publique" data-view="1">👁</button>' +
+        '<button type="button" class="edit-btn" title="Modifier la fiche" data-edit="1">✎</button>' +
+        '<button type="button" class="edit-btn" title="Supprimer" data-del="1">🗑</button>' +
+      '</div>';
+
+    el.onclick = function (e) {
+      if (e.target.closest('.edit-btn')) return;
+      selectArtist(a.id);
+    };
+    el.querySelector('[data-view]').onclick = function (e) {
+      e.stopPropagation();
+      window.open('artist.html?id=' + encodeURIComponent(a.id), '_blank');
+    };
+    el.querySelector('[data-edit]').onclick = function (e) {
+      e.stopPropagation();
+      location.href = 'manager-artist-edit.html?id=' + encodeURIComponent(a.id);
+    };
+    el.querySelector('[data-del]').onclick = async function (e) {
+      e.stopPropagation();
+      if (!confirm('Supprimer définitivement « ' + a.name + ' » ?\nSes conversations seront aussi supprimées.')) return;
+      try {
+        await api('/manager/artists/' + encodeURIComponent(a.id), { method: 'DELETE' });
+        if (currentArtistId === a.id) {
+          currentArtistId = null;
+          currentConversationId = null;
+          currentFanName = null;
+          threadEl.innerHTML = '<div class="empty">Sélectionnez une conversation.</div>';
+          convItemsEl.innerHTML = '';
+        }
+        await loadArtists();
+      } catch (err) {
+        alert(err.message || 'Suppression impossible');
+      }
+    };
+    artistListEl.appendChild(el);
+  });
+}
+
+document.getElementById('btnAddArtist').onclick = function () {
+  location.href = 'manager-artist-edit.html';
+};
+
+async function loadConversations(artistId) {
+  if (!artistId) {
+    conversationsCache = [];
+    renderConversations();
+    return;
+  }
+  try {
+    var path =
+      viewMode === 'trash'
+        ? '/manager/artists/' + encodeURIComponent(artistId) + '/conversations/trash'
+        : '/manager/artists/' + encodeURIComponent(artistId) + '/conversations';
+    var list = await api(path);
+    conversationsCache = Array.isArray(list) ? list : [];
+    if (viewMode === 'inbox') {
+      checkBackgroundNewMessages(conversationsCache);
+    }
+  } catch (e) {
+    conversationsCache = [];
+    console.error('loadConversations', e);
+    convItemsEl.innerHTML =
+      '<div style="padding:24px;color:var(--red);font-size:12px;font-family:var(--font-mono);">Erreur chargement: ' +
+      (e.message || e) +
+      '</div>';
+    return;
+  }
+  renderConversations();
+}
+
+function checkBackgroundNewMessages(list) {
+  if (!Array.isArray(list) || !list.length) return;
+  var toNotify = [];
+  list.forEach(function (c) {
+    if (c.id === currentConversationId) return;
+    if (!c.unread_count || c.unread_count < 1) return;
+    var last = c.last_message;
+    if (!last) return;
+    if (last.id != null) {
+      if (isMsgSeen(last.id)) return;
+      if (last.sender_type && last.sender_type !== 'fan') return;
+      toNotify.push({ fan: c.fan_username || 'fan', msg: last });
+      return;
+    }
+    var compositeId = 'last:' + c.id + ':' + (last.created_at || '') + ':' + (last.text || '').slice(0, 40);
+    if (isMsgSeen(compositeId)) return;
+    toNotify.push({
+      fan: c.fan_username || 'fan',
+      msg: Object.assign({}, last, { id: compositeId })
+    });
+  });
+  if (!toNotify.length) return;
+  var byFan = {};
+  toNotify.forEach(function (item) {
+    if (!byFan[item.fan]) byFan[item.fan] = [];
+    byFan[item.fan].push(item.msg);
+  });
+  Object.keys(byFan).forEach(function (fan) {
+    notifyNewFanMessages(byFan[fan], fan);
+  });
+}
+
+function renderConversations() {
+  var artist = artists.find(function (a) { return a.id === currentArtistId; });
+  var q = (searchBox.value || '').toLowerCase().trim();
+  var pinned = getPinned()[currentArtistId] || [];
+  var list = conversationsCache.slice();
+
+  if (viewMode === 'blocked') {
+    var blocked = getBlocked();
+    convTitle.textContent = 'Bloqués';
+    convSub.textContent = blocked.length + ' fan' + (blocked.length > 1 ? 's' : '');
+    convItemsEl.innerHTML = '';
+    if (!blocked.length) {
+      convItemsEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--font-mono);">Aucun fan bloqué</div>';
+      return;
+    }
+    blocked.forEach(function (fan) {
+      var el = document.createElement('div');
+      el.className = 'conv-item';
+      el.innerHTML =
+        '<div class="avatar-wrap"><div class="avatar"></div></div>' +
+        '<div class="meta"><div class="fname">' + fan + '</div><div class="snippet">Bloqué</div></div>' +
+        '<div class="conv-actions"><button title="Débloquer" data-unblock="1">✓</button></div>';
+      el.querySelector('[data-unblock]').onclick = function (e) {
+        e.stopPropagation();
+        setBlocked(getBlocked().filter(function (x) { return x !== fan; }));
+        renderConversations();
+      };
+      convItemsEl.appendChild(el);
+    });
+    return;
+  }
+
+  if (q) {
+    list = list.filter(function (c) {
+      return (c.fan_username || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  list.sort(function (a, b) {
+    var pa = pinned.indexOf(a.fan_username) !== -1 ? 0 : 1;
+    var pb = pinned.indexOf(b.fan_username) !== -1 ? 0 : 1;
+    return pa - pb;
+  });
+
+  convTitle.textContent = viewMode === 'trash' ? 'Corbeille' : (artist ? artist.name : 'Conversations');
+  convSub.textContent = list.length + ' conversation' + (list.length > 1 ? 's' : '');
+  convItemsEl.innerHTML = '';
+
+  if (!list.length) {
+    convItemsEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--font-mono);">Aucune conversation</div>';
+    return;
+  }
+
+  list.forEach(function (c) {
+    var el = document.createElement('div');
+    var isPin = pinned.indexOf(c.fan_username) !== -1;
+    el.className = 'conv-item' + (currentConversationId === c.id ? ' active' : '') + (isPin ? ' pinned' : '');
+
+    var snippet = '';
+    var last = c.last_message;
+    if (last) {
+      if (last.image_url) snippet = '📷 Photo';
+      else if (isStickerText(last.text)) snippet = last.text;
+      else snippet = last.text || '';
+    }
+    var time = last && last.created_at ? formatTime(last.created_at) : (c.updated_at ? formatTime(c.updated_at) : '');
+
+    el.innerHTML =
+      '<div class="avatar-wrap">' + fanAvatarHtml(c) + '</div>' +
+      '<div class="meta">' +
+        '<div class="top-row">' +
+          '<span class="fname">' + (isPin ? '<span class="pin-icon">📌</span>' : '') +
+          (c.fan_username || '') +
+          (c.unread_count ? '<span class="badge">' + c.unread_count + '</span>' : '') +
+          '</span>' +
+          '<span class="time">' + time + '</span>' +
+        '</div>' +
+        '<div class="snippet">' + (snippet || '') + '</div>' +
+      '</div>' +
+      '<div class="conv-actions">' +
+        (viewMode === 'trash'
+          ? '<button title="Relancer" data-restore="1">↩</button><button class="danger" title="Supprimer définitivement" data-purge="1">✕</button>'
+          : '<button title="Épingler" data-pin="1">📌</button><button title="Bloquer" data-block="1">🚫</button><button class="danger" title="Corbeille" data-trash="1">✕</button>') +
+      '</div>';
+
+    el.onclick = function (e) {
+      if (e.target.closest('.conv-actions')) return;
+      if (viewMode === 'trash') {
+        openTrashPreview(c);
+        return;
+      }
+      if (!c.id) return;
+      selectConversation(c);
+    };
+
+    var pinBtn = el.querySelector('[data-pin]');
+    if (pinBtn) pinBtn.onclick = function (e) { e.stopPropagation(); togglePin(c.fan_username); };
+    var blockBtn = el.querySelector('[data-block]');
+    if (blockBtn) blockBtn.onclick = function (e) { e.stopPropagation(); blockFan(c.fan_username); };
+    var trashBtn = el.querySelector('[data-trash]');
+    if (trashBtn) trashBtn.onclick = function (e) { e.stopPropagation(); moveToTrash(c); };
+    var restoreBtn = el.querySelector('[data-restore]');
+    if (restoreBtn) restoreBtn.onclick = function (e) { e.stopPropagation(); restoreFromTrash(c); };
+    var purgeBtn = el.querySelector('[data-purge]');
+    if (purgeBtn) purgeBtn.onclick = function (e) { e.stopPropagation(); purgeForever(c); };
+
+    convItemsEl.appendChild(el);
+  });
+}
+
+function togglePin(fan) {
+  var p = getPinned();
+  if (!p[currentArtistId]) p[currentArtistId] = [];
+  if (p[currentArtistId].indexOf(fan) !== -1) p[currentArtistId] = p[currentArtistId].filter(function (x) { return x !== fan; });
+  else p[currentArtistId].push(fan);
+  setPinned(p);
+  renderConversations();
+}
+
+function blockFan(fan) {
+  if (!confirm('Bloquer ' + fan + ' ?')) return;
+  var b = getBlocked();
+  if (b.indexOf(fan) === -1) b.push(fan);
+  setBlocked(b);
+  alert(fan + ' a été bloqué.');
+  renderConversations();
+}
+
+async function moveToTrash(c) {
+  if (!c || !c.id) return;
+  if (!confirm('Mettre la conversation avec ' + c.fan_username + ' à la corbeille ?')) return;
+  try {
+    await api('/manager/conversations/' + c.id + '/trash', { method: 'POST' });
+    if (currentConversationId === c.id) {
+      currentConversationId = null;
+      currentFanName = null;
+      threadEl.innerHTML = '<div class="empty">Sélectionnez une conversation.</div>';
+    }
+    await loadConversations(currentArtistId);
+  } catch (err) {
+    alert(err.message || 'Impossible de mettre à la corbeille');
+  }
+}
+
+async function restoreFromTrash(c) {
+  if (!c || !c.id) return;
+  try {
+    await api('/manager/conversations/' + c.id + '/restore', { method: 'POST' });
+    await loadConversations(currentArtistId);
+  } catch (err) {
+    alert(err.message || 'Impossible de restaurer');
+  }
+}
+
+async function purgeForever(c) {
+  if (!c || !c.id) return;
+  if (!confirm('Supprimer définitivement la conversation avec ' + c.fan_username + ' ?\nIrréversible.')) return;
+  try {
+    await api('/manager/conversations/' + c.id, { method: 'DELETE' });
+    if (currentConversationId === c.id) {
+      currentConversationId = null;
+      threadEl.innerHTML = '<div class="empty">Sélectionnez une conversation.</div>';
+    }
+    await loadConversations(currentArtistId);
+  } catch (err) {
+    alert(err.message || 'Suppression impossible');
+  }
+}
+
+function openTrashPreview(c) {
+  currentFanName = c.fan_username;
+  threadEl.innerHTML =
+    '<div class="thread-header">' +
+      '<button class="mobile-back" id="backToConvs">←</button>' +
+      '<div class="avatar-wrap">' + fanAvatarHtml(c) + '</div>' +
+      '<div><div class="name">' + (c.fan_username || '') + '</div><div class="sub">Corbeille</div></div>' +
+    '</div>' +
+    '<div class="empty">Conversation en corbeille.</div>' +
+    '<div class="composer" style="text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+      '<button class="logout-btn" id="btnRestoreNow">↩ Relancer</button>' +
+      '<button class="logout-btn" id="btnPurgeNow" style="border-color:var(--red);color:var(--red);">✕ Supprimer définitivement</button>' +
+    '</div>';
+  document.getElementById('backToConvs').onclick = function () { showPanel(convListEl); };
+  document.getElementById('btnRestoreNow').onclick = async function () {
+    await restoreFromTrash(c);
+    viewMode = 'inbox';
+    setViewButtons();
+    await loadConversations(currentArtistId);
+  };
+  document.getElementById('btnPurgeNow').onclick = async function () {
+    await purgeForever(c);
+  };
+  showPanel(threadEl);
+}
+
+function bubbleRow(m) {
+  var mine = m.sender_type === 'manager';
+  var row = document.createElement('div');
+  row.className = 'bubble-row' + (mine ? ' mine' : '');
+  row.dataset.mid = m.id;
+  var bubble = document.createElement('div');
+  var cls = 'bubble';
+  var imgUrl = m.image_url ? resolveImageUrl(m.image_url) : null;
+  var sticker = !imgUrl && isStickerText(m.text);
+  if (imgUrl) cls += ' has-image';
+  if (sticker) cls += ' sticker-msg';
+  bubble.className = cls;
+  var body = imgUrl ? '<img src="' + imgUrl + '" alt="">' : (m.text || '');
+  var reactions = reactionsMap[m.id] || {};
+  var keys = Object.keys(reactions);
+  var reacts = '';
+  if (keys.length) {
+    reacts = '<div class="reactions">' + keys.map(function (e) {
+      var n = reactions[e].length;
+      return '<span class="reaction-chip">' + e + (n > 1 ? ' ' + n : '') + '</span>';
+    }).join('') + '</div>';
+  }
+  bubble.innerHTML = body + '<div><span class="time">' + formatTime(m.created_at) + '</span></div>' + reacts;
+  row.appendChild(bubble);
+  var rb = document.createElement('button');
+  rb.className = 'react-btn';
+  rb.textContent = '😊';
+  rb.title = 'Réagir';
+  rb.onclick = function (e) { e.stopPropagation(); showReactPanel(e, m.id); };
+  row.appendChild(rb);
+  return row;
+}
+
+function showReactPanel(e, msgId) {
+  var panel = document.getElementById('reactPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'reactPanel';
+    panel.className = 'react-panel';
+    document.body.appendChild(panel);
+  }
+  panel.innerHTML = REACT_EMOJIS.map(function (em) {
+    return '<button type="button" data-em="' + em + '">' + em + '</button>';
+  }).join('');
+  panel.classList.add('show');
+  panel.style.left = e.clientX + 'px';
+  panel.style.top = (e.clientY - 40) + 'px';
+  panel.onclick = function (ev) {
+    var em = ev.target.dataset.em;
+    if (!em) return;
+    if (!reactionsMap[msgId]) reactionsMap[msgId] = {};
+    if (!reactionsMap[msgId][em]) reactionsMap[msgId][em] = [];
+    if (reactionsMap[msgId][em].indexOf('manager') === -1) reactionsMap[msgId][em].push('manager');
+    panel.classList.remove('show');
+    refreshOpenThread(true);
+  };
+  setTimeout(function () {
+    document.addEventListener('click', function hide() {
+      panel.classList.remove('show');
+      document.removeEventListener('click', hide);
+    });
+  }, 10);
+}
+
+async function uploadManagerChatImage(conversationId, file) {
+  var formData = new FormData();
+  formData.append('file', file);
+  var headers = authHeaders();
+  delete headers['Content-Type'];
+  var res = await fetch(API_BASE + '/manager/conversations/' + conversationId + '/image', {
+    method: 'POST',
+    headers: headers,
+    body: formData
+  });
+  var data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((data && data.detail) || ('Erreur ' + res.status));
+  return data.image_url;
+}
+
+async function selectConversation(c) {
+  currentConversationId = c.id;
+  currentFanName = c.fan_username;
+  currentArtistId = c.artist_id || currentArtistId;
+  lastMsgCount = 0;
+
+  threadEl.innerHTML =
+    '<div class="thread-header">' +
+      '<button class="mobile-back" id="backToConvs">←</button>' +
+      '<div class="avatar-wrap">' + fanAvatarHtml(c) + '</div>' +
+      '<div><div class="name">' + (c.fan_username || '') + '</div><div class="sub" id="threadStatus">conversation</div></div>' +
+      '<div class="header-actions">' +
+        '<button type="button" id="btnPinThread">📌</button>' +
+        '<button type="button" id="btnBlockThread">🚫</button>' +
+        '<button type="button" id="btnTrashThread">✕</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="chat-area" id="chatArea">' +
+      '<div class="typing-row" id="typingRow"><span class="typing-dots"><span></span><span></span><span></span></span> <span id="typingLabel"></span></div>' +
+    '</div>' +
+    '<div class="composer">' +
+      '<div class="sticker-panel" id="stickerPanel"><div class="sticker-grid" id="stickerGrid"></div></div>' +
+      '<div class="preview-strip" id="previewStrip"><div class="preview-chip"><img id="previewImg" src="" alt=""><div class="remove" id="removePreview">✕</div></div></div>' +
+      '<form id="replyForm">' +
+        '<button type="button" class="icon-btn" id="stickerBtn" title="Stickers">😊</button>' +
+        '<label class="icon-btn" title="Photo">📎<input type="file" id="fileInput" accept="image/*" hidden></label>' +
+        '<input type="text" id="replyInput" placeholder="Répondre à ' + (c.fan_username || '') + '…" autocomplete="off">' +
+        '<button type="submit">Envoyer</button>' +
+      '</form>' +
+    '</div>';
+
+  document.getElementById('backToConvs').onclick = function () { showPanel(convListEl); };
+  showPanel(threadEl);
+  document.getElementById('btnPinThread').onclick = function () { togglePin(c.fan_username); };
+  document.getElementById('btnBlockThread').onclick = function () { blockFan(c.fan_username); };
+  document.getElementById('btnTrashThread').onclick = function () { moveToTrash(c); };
+
+  var stickerGrid = document.getElementById('stickerGrid');
+  var stickerPanel = document.getElementById('stickerPanel');
+  STICKERS.forEach(function (s) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = s;
+    b.onclick = function () {
+      stickerPanel.classList.remove('show');
+      sendMessage({ text: s });
+    };
+    stickerGrid.appendChild(b);
+  });
+  document.getElementById('stickerBtn').onclick = function () {
+    stickerPanel.classList.toggle('show');
+  };
+
+  var fileInput = document.getElementById('fileInput');
+  var previewStrip = document.getElementById('previewStrip');
+  var previewImg = document.getElementById('previewImg');
+  var replyInput = document.getElementById('replyInput');
+  var pendingImage = null;
+  var pendingFile = null;
+
+  fileInput.onchange = function () {
+    var file = fileInput.files[0];
+    if (!file) return;
+    pendingFile = file;
+    var reader = new FileReader();
+    reader.onload = function () {
+      pendingImage = reader.result;
+      previewImg.src = pendingImage;
+      previewStrip.classList.add('show');
+    };
+    reader.readAsDataURL(file);
+  };
+  document.getElementById('removePreview').onclick = function () {
+    pendingImage = null;
+    pendingFile = null;
+    fileInput.value = '';
+    previewStrip.classList.remove('show');
+  };
+
+  document.getElementById('replyForm').onsubmit = async function (e) {
+    e.preventDefault();
+    var text = replyInput.value.trim();
+    if (!text && !pendingFile) return;
+    try {
+      var imageUrl = null;
+      if (pendingFile) {
+        imageUrl = await uploadManagerChatImage(currentConversationId, pendingFile);
+      }
+      await sendMessage({ text: text || null, image_url: imageUrl });
+    } catch (err) {
+      alert(err.message || "Impossible d'envoyer la photo");
+      return;
+    }
+    replyInput.value = '';
+    pendingImage = null;
+    pendingFile = null;
+    fileInput.value = '';
+    previewStrip.classList.remove('show');
+  };
+
+  await refreshOpenThread(true);
+  renderConversations();
+}
+
+async function refreshOpenThread(force) {
+  if (!currentConversationId) return;
+  try {
+    var messages = await api('/manager/conversations/' + currentConversationId + '/messages');
+    if (!Array.isArray(messages)) messages = [];
+    if (!force && messages.length === lastMsgCount) return;
+
+    var isFirstLoad = (lastMsgCount === 0 || force);
+    var newFanMessages = [];
+    if (!isFirstLoad) {
+      messages.forEach(function (m) {
+        if (m && m.sender_type === 'fan' && m.id != null && !isMsgSeen(m.id)) {
+          newFanMessages.push(m);
+        }
+      });
+    }
+    if (newFanMessages.length) {
+      notifyNewFanMessages(newFanMessages, currentFanName);
+    }
+    markMessagesSeen(messages.map(function (m) { return m && m.id; }));
+    lastMsgCount = messages.length;
+    currentMessages = messages;
+
+    var chatArea = document.getElementById('chatArea');
+    var typingRow = document.getElementById('typingRow');
+    if (!chatArea || !typingRow) return;
+    chatArea.querySelectorAll('.bubble-row').forEach(function (r) { r.remove(); });
+    messages.forEach(function (m) {
+      chatArea.insertBefore(bubbleRow(m), typingRow);
+    });
+    chatArea.scrollTop = chatArea.scrollHeight;
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+async function sendMessage(payload) {
+  if (!currentConversationId) return;
+  try {
+    await api('/manager/conversations/' + currentConversationId + '/messages', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    await refreshOpenThread(true);
+    await loadConversations(currentArtistId);
+  } catch (err) {
+    alert(err.message || "Impossible d'envoyer");
+  }
+}
+
+async function selectArtist(id) {
+  currentArtistId = id;
+  currentConversationId = null;
+  currentFanName = null;
+  lastMsgCount = 0;
+  renderArtists();
+  await loadConversations(id);
+  threadEl.innerHTML = '<div class="empty">Sélectionnez une conversation pour l\'ouvrir.</div>';
+  showPanel(convListEl);
+}
+
+document.getElementById('backToArtists').onclick = function () { showPanel(sidebarEl); };
+searchBox.oninput = function () { renderConversations(); };
+
+function setViewButtons() {
+  document.getElementById('btnInbox').classList.toggle('active', viewMode === 'inbox');
+  document.getElementById('btnTrash').classList.toggle('active', viewMode === 'trash');
+  document.getElementById('btnBlocked').classList.toggle('active', viewMode === 'blocked');
+}
+
+document.getElementById('btnInbox').onclick = function () {
+  viewMode = 'inbox';
+  setViewButtons();
+  loadConversations(currentArtistId);
+};
+document.getElementById('btnTrash').onclick = function () {
+  viewMode = 'trash';
+  setViewButtons();
+  currentConversationId = null;
+  threadEl.innerHTML = '<div class="empty">Corbeille — ↩ pour relancer, ✕ pour supprimer définitivement.</div>';
+  loadConversations(currentArtistId);
+};
+document.getElementById('btnBlocked').onclick = function () {
+  viewMode = 'blocked';
+  setViewButtons();
+  currentConversationId = null;
+  renderConversations();
+  threadEl.innerHTML = '<div class="empty">Fans bloqués</div>';
+};
+
+document.getElementById('lightbox').onclick = function () {
+  document.getElementById('lightbox').classList.remove('show');
+};
+document.addEventListener('click', function (e) {
+  if (e.target.tagName === 'IMG' && e.target.closest('.bubble.has-image')) {
+    document.getElementById('lightboxImg').src = e.target.src;
+    document.getElementById('lightbox').classList.add('show');
+  }
+});
+
+setInterval(async function () {
+  if (viewMode !== 'inbox') return;
+  try {
+    var list = await api('/manager/artists');
+    if (Array.isArray(list)) {
+      artists = list;
+      renderArtists();
+    }
+    if (currentArtistId) {
+      await loadConversations(currentArtistId);
+      if (currentConversationId) await refreshOpenThread(false);
+    }
+  } catch (e) {}
+}, 2000);
+
+setViewButtons();
+ensureNotifPermission();
+
+(async function init() {
+  var box = document.getElementById('artistList');
+  if (box) box.innerHTML = '<div style="padding:12px;font-size:12px;color:#6e6e79;">Chargement…</div>';
+  if (typeof api !== 'function') {
+    if (box) box.innerHTML = '<div style="padding:12px;color:#e11d3c;">api.js non chargé</div>';
+    return;
+  }
+  try {
+    await loadArtists();
+  } catch (err) {
+    if (box) box.innerHTML = '<div style="padding:12px;color:#e11d3c;">Erreur: ' + (err.message || err) + '</div>';
+  }
+})();
+</script>
+</body>
+</html>
