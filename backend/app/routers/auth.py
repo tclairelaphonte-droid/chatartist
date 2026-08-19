@@ -16,7 +16,7 @@ from app.schemas import (
 from app.security import hash_password, verify_password, create_access_token
 from app.config import settings
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 RESET_TOKEN_VALID_MINUTES = 30
 
