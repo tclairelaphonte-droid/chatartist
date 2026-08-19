@@ -3,159 +3,193 @@ const API_BASE =
     ? "http://127.0.0.1:8000"
     : "https://chatartist-xkqv.vercel.app";
 
+const AUTH_BASE = API_BASE + "/api/auth";
+
 function getToken() {
-return localStorage.getItem("backstage_token");
+  return localStorage.getItem("backstage_token");
 }
 
 function authHeaders() {
-const headers = {
-"Content-Type": "application/json",
-};
+  const headers = {
+    "Content-Type": "application/json",
+  };
 
-const token = getToken();
+  const token = getToken();
 
-if (token) {
-headers.Authorization = "Bearer " + token;
-}
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
 
-// Admin qui consulte le dashboard d'un manager client
-const actAs = sessionStorage.getItem("backstage_act_as_manager");
+  // Admin qui consulte le dashboard d'un manager client
+  const actAs = sessionStorage.getItem("backstage_act_as_manager");
 
-if (actAs) {
-headers["X-Act-As-Manager"] = actAs;
-}
+  if (actAs) {
+    headers["X-Act-As-Manager"] = actAs;
+  }
 
-return headers;
+  return headers;
 }
 
 /**
-
-* Appel API générique.
-*
-* Exemples :
-* await api("/artists")
-*
-* await api("/auth/login", {
-* ```
-  method: "POST",
-  ```
-* ```
-  body: JSON.stringify({...})
-  ```
-* })
-  */
-  async function api(path, options = {}) {
+ * Appel API générique.
+ *
+ * Exemples :
+ * await api("/artists")
+ *
+ * await apiAuth("/login", {
+ *   method: "POST",
+ *   body: JSON.stringify({...})
+ * })
+ */
+async function api(path, options = {}) {
   const method = (options.method || "GET").toUpperCase();
 
-const headers = {
-...authHeaders(),
-...(options.headers || {}),
-};
+  const headers = {
+    ...authHeaders(),
+    ...(options.headers || {}),
+  };
 
-// Pas de Content-Type lorsqu'il n'y a pas de body.
-// Utile notamment pour les requêtes GET et DELETE sans contenu.
-if (!options.body) {
-delete headers["Content-Type"];
+  // Pas de Content-Type lorsqu'il n'y a pas de body.
+  if (!options.body) {
+    delete headers["Content-Type"];
+  }
+
+  const res = await fetch(API_BASE + path, {
+    ...options,
+    method,
+    headers,
+  });
+
+  // 204 No Content
+  if (res.status === 204) {
+    return null;
+  }
+
+  let data = null;
+
+  try {
+    data = await res.json();
+  } catch (_) {
+    data = {};
+  }
+
+  if (!res.ok) {
+    const detail = data.detail;
+    let message = "Erreur " + res.status;
+
+    if (typeof detail === "string") {
+      message = detail;
+    } else if (Array.isArray(detail)) {
+      message = detail
+        .map(function (d) {
+          return d.msg || JSON.stringify(d);
+        })
+        .join(", ");
+    }
+
+    throw new Error(message);
+  }
+
+  return data;
 }
 
-const res = await fetch(API_BASE + path, {
-...options,
-method,
-headers,
-});
+/**
+ * Appel API pour les routes auth (/api/auth/...).
+ */
+async function apiAuth(path, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
 
-// 204 No Content = opération réussie sans réponse JSON.
-if (res.status === 204) {
-return null;
-}
+  const headers = {
+    ...authHeaders(),
+    ...(options.headers || {}),
+  };
 
-let data = null;
+  if (!options.body) {
+    delete headers["Content-Type"];
+  }
 
-try {
-data = await res.json();
-} catch (_) {
-data = {};
-}
+  const res = await fetch(AUTH_BASE + path, {
+    ...options,
+    method,
+    headers,
+  });
 
-if (!res.ok) {
-const detail = data.detail;
-let message = "Erreur " + res.status;
+  if (res.status === 204) {
+    return null;
+  }
 
-```
-if (typeof detail === "string") {
-  message = detail;
-} else if (Array.isArray(detail)) {
-  message = detail
-    .map(function (d) {
-      return d.msg || JSON.stringify(d);
-    })
-    .join(", ");
-}
+  let data = null;
 
-throw new Error(message);
-```
+  try {
+    data = await res.json();
+  } catch (_) {
+    data = {};
+  }
 
-}
+  if (!res.ok) {
+    const detail = data.detail;
+    let message = "Erreur " + res.status;
 
-return data;
+    if (typeof detail === "string") {
+      message = detail;
+    } else if (Array.isArray(detail)) {
+      message = detail
+        .map(function (d) {
+          return d.msg || JSON.stringify(d);
+        })
+        .join(", ");
+    }
+
+    throw new Error(message);
+  }
+
+  return data;
 }
 
 function logout() {
-[
-"backstage_token",
-"backstage_username",
-"backstage_email",
-"backstage_role",
-].forEach(function (key) {
-localStorage.removeItem(key);
-});
+  [
+    "backstage_token",
+    "backstage_username",
+    "backstage_email",
+    "backstage_role",
+  ].forEach(function (key) {
+    localStorage.removeItem(key);
+  });
 
-sessionStorage.removeItem("backstage_act_as_manager");
-sessionStorage.removeItem("backstage_act_as_label");
+  sessionStorage.removeItem("backstage_act_as_manager");
+  sessionStorage.removeItem("backstage_act_as_label");
 
-location.href = "login.html";
+  location.href = "login.html";
 }
 
 /**
-
-* role optionnel : "fan", "manager" ou "admin"
-*
-* Pour "manager", un compte admin est aussi accepté
-* (supervision + son espace).
-*
-* Retourne false si redirection en cours.
-  */
-  function requireAuth(role) {
+ * role optionnel : "fan", "manager" ou "admin"
+ */
+function requireAuth(role) {
   const token = getToken();
 
-if (!token) {
-const next = encodeURIComponent(
-location.pathname.split("/").pop() + location.search
-);
+  if (!token) {
+    const next = encodeURIComponent(
+      location.pathname.split("/").pop() + location.search
+    );
 
-```
-location.replace("login.html?next=" + next);
-return false;
-```
-
-}
-
-if (role) {
-const currentRole = localStorage.getItem("backstage_role");
-
-```
-if (role === "manager") {
-  if (currentRole !== "manager" && currentRole !== "admin") {
-    location.replace("login.html");
+    location.replace("login.html?next=" + next);
     return false;
   }
-} else if (currentRole !== role) {
-  location.replace(role === "admin" ? "login.html" : "index.html");
-  return false;
-}
-```
 
-}
+  if (role) {
+    const currentRole = localStorage.getItem("backstage_role");
 
-return true;
+    if (role === "manager") {
+      if (currentRole !== "manager" && currentRole !== "admin") {
+        location.replace("login.html");
+        return false;
+      }
+    } else if (currentRole !== role) {
+      location.replace(role === "admin" ? "login.html" : "index.html");
+      return false;
+    }
+  }
+
+  return true;
 }

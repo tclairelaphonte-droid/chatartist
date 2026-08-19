@@ -227,12 +227,12 @@
     try {
       let data;
       if (isRegister) {
-        data = await api('/auth/register', {
+        data = await apiAuth('/register', {
           method: 'POST',
           body: JSON.stringify({ email: email, password: password, username: username })
         });
       } else {
-        data = await api('/auth/login', {
+        data = await apiAuth('/login', {
           method: 'POST',
           body: JSON.stringify({ email: email, password: password })
         });
@@ -240,7 +240,7 @@
 
       localStorage.setItem('backstage_token', data.access_token);
 
-      const me = await api('/auth/me');
+      const me = await apiAuth('/me');
       localStorage.setItem('backstage_username', me.username);
       localStorage.setItem('backstage_email', me.email);
       localStorage.setItem('backstage_role', me.role);
