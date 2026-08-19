@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from app.routers import artists
-from app.routers import auth  # <-- ajout du router auth
+from app.routers import auth
 
 
 app = FastAPI(
@@ -24,7 +24,7 @@ app.add_middleware(
 
 # Routes
 app.include_router(artists.router)
-app.include_router(auth.router, prefix="/api/auth")  # <-- routes /api/auth/*
+app.include_router(auth.router, prefix="/api/auth")
 
 
 @app.get("/")
