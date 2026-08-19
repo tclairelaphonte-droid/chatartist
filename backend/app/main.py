@@ -4,13 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import artists
 from app.routers import auth
 from app.routers import admin
+from app.routers import manager
+from app.routers import uploads
 
 app = FastAPI(
     title="ArtistChat API",
     version="0.1.0",
 )
 
-# CORS (pour que ton frontend Netlify puisse appeler le backend Vercel)
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,10 +21,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes
+# Routes publiques
 app.include_router(artists.router)
+
+# Authentification
 app.include_router(auth.router, prefix="/api/auth")
+
+# Administration
 app.include_router(admin.router)
+
+# Espace manager
+app.include_router(manager.router)
+
+# Uploads manager
+app.include_router(uploads.router)
 
 
 @app.get("/")
