@@ -15,8 +15,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-
-# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -27,26 +25,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Routes publiques
 app.include_router(artists.router)
-
-# Auth
 app.include_router(auth.router, prefix="/api/auth")
-
-# Fan
 app.include_router(conversations.router)
-
-# Manager
 app.include_router(manager.router)
-
-# Uploads manager
 app.include_router(uploads.router)
-
-# WebSocket
 app.include_router(ws.router)
-
-# Admin
 app.include_router(admin.router)
 
 
