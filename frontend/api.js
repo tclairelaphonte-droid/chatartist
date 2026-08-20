@@ -12,6 +12,7 @@ function getToken() {
 function authHeaders() {
   const headers = {
     "Content-Type": "application/json",
+    "x-vercel-protection-bypass": "backstageBypassSecretKey2026xx"
   };
 
   const token = getToken();
