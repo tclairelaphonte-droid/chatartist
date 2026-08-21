@@ -1,5 +1,8 @@
+import os
 import uuid
-from pathlib import Path
+
+import cloudinary
+import cloudinary.uploader
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -10,51 +13,81 @@ from app.database import get_db
 from app.deps import require_manager
 from app.models import Artist, User
 
+
 router = APIRouter(prefix="/manager/artists", tags=["manager-uploads"])
 
-ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+ALLOWED_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+}
+
 MAX_BYTES = settings.max_upload_size_mb * 1024 * 1024
 
 
-def _save_image(file: UploadFile, subdir: str) -> str:
+# Cloudinary utilise directement la variable d'environnement
+# CLOUDINARY_URL configurée dans Vercel.
+cloudinary.config(
+    cloudinary_url=os.getenv("CLOUDINARY_URL"),
+    secure=True,
+)
+
+
+async def _upload_image(file: UploadFile, subdir: str) -> str:
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,
             detail="Format non supporté. Utilisez JPEG, PNG, WebP ou GIF.",
         )
 
-    data = file.file.read()
+    data = await file.read()
+
     if len(data) > MAX_BYTES:
         raise HTTPException(
             status_code=400,
             detail=f"Fichier trop volumineux (max {settings.max_upload_size_mb} Mo).",
         )
 
-    ext = {
-        "image/jpeg": ".jpg",
-        "image/png": ".png",
-        "image/webp": ".webp",
-        "image/gif": ".gif",
-    }.get(file.content_type, ".jpg")
+    try:
+        result = cloudinary.uploader.upload(
+            data,
+            folder=f"chatartist/{subdir}",
+            public_id=uuid.uuid4().hex,
+            resource_type="image",
+        )
 
-    folder = Path(settings.upload_dir) / subdir
-    folder.mkdir(parents=True, exist_ok=True)
+        secure_url = result.get("secure_url")
 
-    filename = f"{uuid.uuid4().hex}{ext}"
-    path = folder / filename
-    path.write_bytes(data)
+        if not secure_url:
+            raise RuntimeError("Cloudinary n'a pas retourné d'URL.")
 
-    return f"/files/{subdir}/{filename}".replace("\\", "/")
+        return secure_url
+
+    except Exception as exc:
+        print(f"Cloudinary upload error: {exc}")
+        raise HTTPException(
+            status_code=500,
+            detail="Impossible d'envoyer l'image.",
+        )
 
 
 def _owned_artist(db: Session, artist_id: str, manager: User) -> Artist:
     artist = (
         db.query(Artist)
-        .filter(Artist.id == artist_id, Artist.manager_id == manager.id)
+        .filter(
+            Artist.id == artist_id,
+            Artist.manager_id == manager.id,
+        )
         .first()
     )
+
     if not artist:
-        raise HTTPException(status_code=404, detail="Artiste introuvable.")
+        raise HTTPException(
+            status_code=404,
+            detail="Artiste introuvable.",
+        )
+
     return artist
 
 
@@ -66,10 +99,17 @@ async def upload_avatar(
     current_manager: User = Depends(require_manager),
 ):
     artist = _owned_artist(db, artist_id, current_manager)
-    url = _save_image(file, f"managers/{current_manager.id}/avatars")
+
+    url = await _upload_image(
+        file,
+        f"managers/{current_manager.id}/avatars",
+    )
+
     artist.avatar_url = url
+
     db.commit()
     db.refresh(artist)
+
     return {"avatar_url": artist.avatar_url}
 
 
@@ -81,10 +121,17 @@ async def upload_cover(
     current_manager: User = Depends(require_manager),
 ):
     artist = _owned_artist(db, artist_id, current_manager)
-    url = _save_image(file, f"managers/{current_manager.id}/covers")
+
+    url = await _upload_image(
+        file,
+        f"managers/{current_manager.id}/covers",
+    )
+
     artist.cover_url = url
+
     db.commit()
     db.refresh(artist)
+
     return {"cover_url": artist.cover_url}
 
 
@@ -95,16 +142,26 @@ async def upload_gallery_image(
     db: Session = Depends(get_db),
     current_manager: User = Depends(require_manager),
 ):
-    """Ajoute une photo à la galerie de l'artiste (page profil)."""
     artist = _owned_artist(db, artist_id, current_manager)
-    url = _save_image(file, f"managers/{current_manager.id}/gallery")
+
+    url = await _upload_image(
+        file,
+        f"managers/{current_manager.id}/gallery",
+    )
+
     gallery = list(artist.gallery or [])
     gallery.append(url)
+
     artist.gallery = gallery
     flag_modified(artist, "gallery")
+
     db.commit()
     db.refresh(artist)
-    return {"url": url, "gallery": artist.gallery}
+
+    return {
+        "url": url,
+        "gallery": artist.gallery,
+    }
 
 
 @router.delete("/{artist_id}/gallery")
@@ -114,11 +171,17 @@ def remove_gallery_image(
     db: Session = Depends(get_db),
     current_manager: User = Depends(require_manager),
 ):
-    """Retire une URL de la galerie (query ?url=...)."""
     artist = _owned_artist(db, artist_id, current_manager)
-    gallery = [u for u in (artist.gallery or []) if u != url]
+
+    gallery = [
+        u for u in (artist.gallery or [])
+        if u != url
+    ]
+
     artist.gallery = gallery
     flag_modified(artist, "gallery")
+
     db.commit()
     db.refresh(artist)
+
     return {"gallery": artist.gallery}
