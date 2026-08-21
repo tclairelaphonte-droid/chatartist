@@ -15,8 +15,15 @@ class Settings(BaseSettings):
     jwt_audience: str = "backstage-client"
     access_token_expire_minutes: int = 60 * 24 * 7
 
-   # Uploads
-max_upload_size_mb: int = 5
+    # Uploads
+    upload_dir: str = "uploads"
+    max_upload_size_mb: int = 5
+
+    # Cloudinary
+    cloudinary_cloud_name: str
+    cloudinary_api_key: str
+    cloudinary_api_secret: str
+
     # CORS
     cors_origins: list[str] = [
         "https://chatartist-frontend.vercel.app",
