@@ -19,6 +19,18 @@ from app.schemas import (
 from app.ws_manager import manager as ws_manager
 
 
+# ---------------------------------------------------------------------------
+# Configuration Cloudinary (IMPORTANT)
+# ---------------------------------------------------------------------------
+
+cloudinary.config(
+    cloud_name=settings.cloudinary_cloud_name,
+    api_key=settings.cloudinary_api_key,
+    api_secret=settings.cloudinary_api_secret,
+    secure=True,
+)
+
+
 router = APIRouter(
     prefix="/conversations",
     tags=["conversations"],
