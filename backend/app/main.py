@@ -18,7 +18,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://chatartist.netlify.app",
+        "https://chatartist-frontend.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],

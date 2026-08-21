@@ -12,7 +12,6 @@ function getToken() {
 function authHeaders() {
   const headers = {
     "Content-Type": "application/json",
-    "x-vercel-protection-bypass": "backstageBypassSecretKey2026xx"
   };
 
   const token = getToken();
@@ -31,17 +30,6 @@ function authHeaders() {
   return headers;
 }
 
-/**
- * Appel API générique.
- *
- * Exemples :
- * await api("/artists")
- *
- * await apiAuth("/login", {
- *   method: "POST",
- *   body: JSON.stringify({...})
- * })
- */
 async function api(path, options = {}) {
   const method = (options.method || "GET").toUpperCase();
 
@@ -50,7 +38,6 @@ async function api(path, options = {}) {
     ...(options.headers || {}),
   };
 
-  // Pas de Content-Type lorsqu'il n'y a pas de body.
   if (!options.body) {
     delete headers["Content-Type"];
   }
@@ -61,7 +48,6 @@ async function api(path, options = {}) {
     headers,
   });
 
-  // 204 No Content
   if (res.status === 204) {
     return null;
   }
@@ -94,9 +80,6 @@ async function api(path, options = {}) {
   return data;
 }
 
-/**
- * Appel API pour les routes auth (/api/auth/...).
- */
 async function apiAuth(path, options = {}) {
   const method = (options.method || "GET").toUpperCase();
 
@@ -163,9 +146,6 @@ function logout() {
   location.href = "login.html";
 }
 
-/**
- * role optionnel : "fan", "manager" ou "admin"
- */
 function requireAuth(role) {
   const token = getToken();
 
