@@ -28,6 +28,18 @@ MAX_BYTES = settings.max_upload_size_mb * 1024 * 1024
 
 # Cloudinary utilise les 3 variables d'environnement séparées
 # configurées dans Vercel.
+
+# DEBUG TEMPORAIRE :
+# On vérifie que les variables sont bien chargées en production
+# sans jamais afficher le contenu du secret.
+print(
+    f"DEBUG Cloudinary → "
+    f"cloud_name={os.getenv('CLOUDINARY_CLOUD_NAME')!r}, "
+    f"api_key_present={bool(os.getenv('CLOUDINARY_API_KEY'))}, "
+    f"api_key_len={len(os.getenv('CLOUDINARY_API_KEY') or '')}, "
+    f"api_secret_len={len(os.getenv('CLOUDINARY_API_SECRET') or '')}"
+)
+
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
