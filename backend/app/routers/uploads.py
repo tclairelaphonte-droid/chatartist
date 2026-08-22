@@ -26,21 +26,13 @@ ALLOWED_TYPES = {
 MAX_BYTES = settings.max_upload_size_mb * 1024 * 1024
 
 
-# Debug temporaire : confirme si CLOUDINARY_URL est bien chargée en prod.
-# A retirer une fois le problème résolu.
-_cloudinary_url_debug = os.getenv("CLOUDINARY_URL")
-print(
-    f"DEBUG CLOUDINARY_URL present={_cloudinary_url_debug is not None}, "
-    f"len={len(_cloudinary_url_debug or '')}"
-)
+# Upload NON SIGNE : plus simple, pas de risque de "Invalid Signature".
+# Il suffit du cloud_name (pas un secret) + d'un upload preset "Unsigned"
+# créé sur Cloudinary (Settings > Upload > Upload presets).
+CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET", "chatartist_uploads")
 
-# Cloudinary utilise directement la variable d'environnement
-# CLOUDINARY_URL configurée dans Vercel (une seule variable,
-# format: cloudinary://<api_key>:<api_secret>@<cloud_name>).
-cloudinary.config(
-    cloudinary_url=_cloudinary_url_debug,
-    secure=True,
-)
+cloudinary.config(cloud_name=CLOUD_NAME, secure=True)
 
 
 async def _upload_image(file: UploadFile, subdir: str) -> str:
@@ -59,8 +51,9 @@ async def _upload_image(file: UploadFile, subdir: str) -> str:
         )
 
     try:
-        result = cloudinary.uploader.upload(
+        result = cloudinary.uploader.unsigned_upload(
             data,
+            UPLOAD_PRESET,
             folder=f"chatartist/{subdir}",
             public_id=uuid.uuid4().hex,
             resource_type="image",
