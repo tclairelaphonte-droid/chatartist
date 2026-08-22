@@ -64,8 +64,33 @@ class Artist(Base):
     slug = Column(String(60), unique=True, nullable=False, index=True)
     name = Column(String(120), nullable=False)
     genre = Column(String(120), nullable=True)
+
+    # --- Biographies multi-langues ---
+    # Français (par défaut)
     bio_short = Column(String(300), nullable=True)
     bio_full = Column(Text, nullable=True)
+
+    # Anglais
+    bio_short_en = Column(String(300), nullable=True)
+    bio_full_en = Column(Text, nullable=True)
+
+    # Italien
+    bio_short_it = Column(String(300), nullable=True)
+    bio_full_it = Column(Text, nullable=True)
+
+    # Allemand
+    bio_short_de = Column(String(300), nullable=True)
+    bio_full_de = Column(Text, nullable=True)
+
+    # Espagnol
+    bio_short_es = Column(String(300), nullable=True)
+    bio_full_es = Column(Text, nullable=True)
+
+    # Finnois
+    bio_short_fi = Column(String(300), nullable=True)
+    bio_full_fi = Column(Text, nullable=True)
+    # --------------------------------
+
     avatar_url = Column(String(500), nullable=True)
     cover_url = Column(String(500), nullable=True)
 

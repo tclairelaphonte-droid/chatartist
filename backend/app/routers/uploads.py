@@ -26,10 +26,12 @@ ALLOWED_TYPES = {
 MAX_BYTES = settings.max_upload_size_mb * 1024 * 1024
 
 
-# Cloudinary utilise directement la variable d'environnement
-# CLOUDINARY_URL configurée dans Vercel.
+# Cloudinary utilise les 3 variables d'environnement séparées
+# configurées dans Vercel.
 cloudinary.config(
-    cloudinary_url=os.getenv("CLOUDINARY_URL"),
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
     secure=True,
 )
 

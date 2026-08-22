@@ -173,7 +173,6 @@
     color: var(--blue);
   }
 
-  /* Bouton Messages + panneau */
   .msg-btn-wrap {
     position: relative;
   }
@@ -286,9 +285,6 @@
     text-align: center;
   }
 
-  /* =========================================================
-     CORRECTIF MOBILE — PANNEAU MESSAGES CENTRÉ ET VISIBLE
-     ========================================================= */
   @media (max-width: 600px) {
     .msg-panel {
       position: fixed !important;
@@ -336,29 +332,29 @@
 <nav>
   <span class="logo"><span>◆</span> Backstage</span>
   <div class="nav-links" id="navLinks">
-    <a href="#artistes" class="plain">Artistes</a>
+    <a href="#artistes" class="plain" data-i18n="nav.artistes">Artistes</a>
   </div>
 </nav>
 
 <section class="hero">
   <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1800&q=80" alt="Concert live, foule et projecteurs">
   <div class="hero-content">
-    <div class="eyebrow" id="heroEyebrow">Plateforme officielle</div>
-    <h1>Vivez la coulisse, <em>pas juste le concert.</em></h1>
-    <p>Un espace unique où vos avis façonnent vraiment les prochaines chansons, les clips et les tournées. Votre voix arrive directement chez l'artist.</p>
-    <a href="#artistes" class="btn primary">voir son artiste</a>
+    <div class="eyebrow" id="heroEyebrow" data-i18n="hero.eyebrow">Plateforme officielle</div>
+    <h1 data-i18n="hero.title">Vivez la coulisse, <em>pas juste le concert.</em></h1>
+    <p data-i18n="hero.subtitle">Un espace unique où vos avis façonnent vraiment les prochaines chansons, les clips et les tournées. Votre voix arrive directement chez l'artiste.</p>
+    <a href="#artistes" class="btn primary" data-i18n="hero.cta">voir son artiste</a>
   </div>
 </section>
 
 <section class="section" id="artistes">
   <div class="section-head reveal">
-    <div class="eyebrow">Nos artistes</div>
-    <h2>Plusieurs univers, une seule communauté</h2>
-    <p>Choisissez un artiste pour découvrir son univers et échanger directement avec l’artiste.</p>
+    <div class="eyebrow" data-i18n="artists.eyebrow">Nos artistes</div>
+    <h2 data-i18n="artists.title">Plusieurs univers, une seule communauté</h2>
+    <p data-i18n="artists.subtitle">Choisissez un artiste pour découvrir son univers et échanger directement avec l’artiste.</p>
   </div>
 
   <div class="ticket-grid" id="ticketGrid">
-    <div class="ticket-empty">Chargement des artistes…</div>
+    <div class="ticket-empty" data-i18n="artists.loading">Chargement des artistes…</div>
   </div>
 </section>
 
@@ -367,35 +363,36 @@
     <div class="feat-grid">
       <div class="feat reveal">
         <div class="num">01</div>
-        <h3>Un message, un artiste</h3>
-        <p>Chaque discussion démarrée depuis une page artiste lui est automatiquement associée — vous n’avez rien à sélectionner.</p>
+        <h3 data-i18n="feat.1.title">Un message, un artiste</h3>
+        <p data-i18n="feat.1.text">Chaque discussion démarrée depuis une page artiste lui est automatiquement associée — vous n’avez rien à sélectionner.</p>
       </div>
       <div class="feat reveal">
         <div class="num">02</div>
-        <h3>Lu par l'artist</h3>
-        <p>Vos idées de clips, vos titres préférés et vos retours arrivent directement dans le tableau de bord de l'artist.</p>
+        <h3 data-i18n="feat.2.title">Lu par l'artiste</h3>
+        <p data-i18n="feat.2.text">Vos idées de clips, vos titres préférés et vos retours arrivent directement dans le tableau de bord de l'artiste.</p>
       </div>
       <div class="feat reveal">
         <div class="num">03</div>
-        <h3>Des décisions, pas des suppositions</h3>
-        <p>Les choix artistiques s’appuient sur vos retours réels : chansons, clips, événements et stratégie.</p>
+        <h3 data-i18n="feat.3.title">Des décisions, pas des suppositions</h3>
+        <p data-i18n="feat.3.text">Les choix artistiques s’appuient sur vos retours réels : chansons, clips, événements et stratégie.</p>
       </div>
     </div>
   </div>
 </div>
 
 <div class="cta-band reveal">
-  <h2>Prêt à faire entendre votre voix ?</h2>
-  <p>Créez votre compte en moins d’une minute et commencez la conversation.</p>
-  <a href="#artistes" class="btn primary">voir son artiste</a>
+  <h2 data-i18n="cta.title">Prêt à faire entendre votre voix ?</h2>
+  <p data-i18n="cta.subtitle">Créez votre compte en moins d’une minute et commencez la conversation.</p>
+  <a href="#artistes" class="btn primary" data-i18n="cta.button">voir son artiste</a>
 </div>
 
 <footer>
   <span class="flogo"><span>◆</span> Backstage</span>
-  <span class="fmeta">plateforme communautaire officielle</span>
+  <span class="fmeta" data-i18n="footer.meta">plateforme communautaire officielle</span>
 </footer>
 
 <script src="api.js"></script>
+<script src="langues.js"></script>
 <script>
   const LOCAL_COVERS = {
     "bruce springsteen": "assets/artiste1/cover2.jpg",
@@ -563,23 +560,23 @@
 
     if (token && username && role === "manager") {
       nav.innerHTML =
-        '<a href="#artistes" class="plain">Artistes</a>' +
-        '<a href="manager-dashboard.html" class="plain">Dashboard</a>' +
-        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+        '<a href="#artistes" class="plain" data-i18n="nav.artistes">Artistes</a>' +
+        '<a href="manager-dashboard.html" class="plain" data-i18n="nav.dashboard">Dashboard</a>' +
+        '<a href="#" class="btn primary" id="logoutBtn" data-i18n="nav.logout">Se déconnecter</a>';
     } else if (token && username && role === "admin") {
       nav.innerHTML =
-        '<a href="#artistes" class="plain">Artistes</a>' +
-        '<a href="manager-dashboard.html" class="plain">Dashboard</a>' +
-        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+        '<a href="#artistes" class="plain" data-i18n="nav.artistes">Artistes</a>' +
+        '<a href="manager-dashboard.html" class="plain" data-i18n="nav.dashboard">Dashboard</a>' +
+        '<a href="#" class="btn primary" id="logoutBtn" data-i18n="nav.logout">Se déconnecter</a>';
     } else if (token && username) {
       nav.innerHTML =
-        '<a href="#artistes" class="plain">Artistes</a>' +
+        '<a href="#artistes" class="plain" data-i18n="nav.artistes">Artistes</a>' +
         '<div class="msg-btn-wrap" id="msgBtnWrap">' +
           '<button type="button" class="msg-btn" id="msgBtn">' +
-            'Messages <span class="msg-badge" id="msgBadge">0</span>' +
+            '<span data-i18n="nav.messages">Messages</span> <span class="msg-badge" id="msgBadge">0</span>' +
           '</button>' +
           '<div class="msg-panel" id="msgPanel">' +
-            '<div class="msg-panel-title">Vos conversations</div>' +
+            '<div class="msg-panel-title" data-i18n="messages.title">Vos conversations</div>' +
             '<div id="fanInboxList">' +
               '<div class="fan-inbox-empty">Chargement…</div>' +
             '</div>' +
@@ -594,16 +591,16 @@
             '</label>' +
           '</div>' +
           '<div class="fan-profile-info">' +
-            '<span class="fan-profile-name">Bonjour, ' + escapeHtml(username) + '</span>' +
-            '<label for="fanAvatarInput" class="fan-profile-upload-text">Importer une photo</label>' +
+            '<span class="fan-profile-name"><span data-i18n="hello">Bonjour,</span> ' + escapeHtml(username) + '</span>' +
+            '<label for="fanAvatarInput" class="fan-profile-upload-text" data-i18n="upload.photo">Importer une photo</label>' +
           '</div>' +
         '</div>' +
-        '<a href="#" class="btn primary" id="logoutBtn">Se déconnecter</a>';
+        '<a href="#" class="btn primary" id="logoutBtn" data-i18n="nav.logout">Se déconnecter</a>';
     } else {
       nav.innerHTML =
-        '<a href="#artistes" class="plain">Artistes</a>' +
-        '<a href="login.html" class="plain">Se connecter</a>' +
-        '<a href="login.html?mode=register" class="btn primary">Rejoindre</a>';
+        '<a href="#artistes" class="plain" data-i18n="nav.artistes">Artistes</a>' +
+        '<a href="login.html" class="plain" data-i18n="nav.login">Se connecter</a>' +
+        '<a href="login.html?mode=register" class="btn primary" data-i18n="nav.register">Rejoindre</a>';
     }
 
     var btn = document.getElementById("logoutBtn");
@@ -623,6 +620,11 @@
     }
 
     setupFanAvatarPreview();
+
+    // Réappliquer les traductions après génération dynamique de la nav
+    if (typeof applyTranslations === "function") {
+      applyTranslations();
+    }
   }
 
   async function loadFanInbox() {
@@ -667,16 +669,17 @@
 
       if (!convs || !convs.length) {
         list.innerHTML =
-          '<div class="fan-inbox-empty">Aucune conversation.<br>Écrivez à un artiste pour commencer.</div>';
+          '<div class="fan-inbox-empty" data-i18n="messages.empty">Aucune conversation.<br>Écrivez à un artiste pour commencer.</div>';
+        if (typeof applyTranslations === "function") applyTranslations();
         return;
       }
 
       list.innerHTML = convs
         .map(function (c) {
           var last = c.last_message;
-          var snippet = "Conversation";
+          var snippet = t("messages.conversation") || "Conversation";
           if (last) {
-            if (last.image_url) snippet = "📷 Photo";
+            if (last.image_url) snippet = t("messages.photo") || "📷 Photo";
             else snippet = last.text || "Message";
             if (last.sender_type === "manager") snippet = "artist : " + snippet;
           }
@@ -715,7 +718,8 @@
     } catch (err) {
       console.warn(err);
       list.innerHTML =
-        '<div class="fan-inbox-empty">Impossible de charger les messages.</div>';
+        '<div class="fan-inbox-empty" data-i18n="messages.error">Impossible de charger les messages.</div>';
+      if (typeof applyTranslations === "function") applyTranslations();
     }
   }
 
@@ -725,13 +729,14 @@
 
     if (!artists || !artists.length) {
       grid.innerHTML =
-        '<div class="ticket-empty">Aucun artiste publié pour le moment.</div>';
+        '<div class="ticket-empty" data-i18n="artists.empty">Aucun artiste publié pour le moment.</div>';
+      if (typeof applyTranslations === "function") applyTranslations();
       return;
     }
 
     if (heroEyebrow) {
       heroEyebrow.textContent =
-        "Plateforme officielle · " +
+        (t("hero.eyebrow") || "Plateforme officielle") + " · " +
         artists.length +
         " artiste" +
         (artists.length > 1 ? "s" : "");
@@ -768,10 +773,10 @@
           escapeHtml(tagline) +
           "</p>" +
           '<div class="perf"></div>' +
-          '<div class="stats"><span>Conversations <b>' +
+          '<div class="stats"><span>' + (t("artists.conversations") || "Conversations") + ' <b>' +
           conv +
           "</b></span></div>" +
-          '<span class="discover">Découvrir →</span>' +
+          '<span class="discover">' + (t("artists.discover") || "Découvrir →") + '</span>' +
           "</div>" +
           "</a>"
         );

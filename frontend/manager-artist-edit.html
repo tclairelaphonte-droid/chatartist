@@ -67,6 +67,11 @@ textarea{min-height:100px;resize:vertical;}
 .msg.show{display:block;}
 .msg.err{background:#fde8ec;color:#b91530;}
 .msg.ok{background:#e8f7ef;color:#0f7a45;}
+.lang-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.lang-tab{padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);}
+.lang-tab.active{border-color:var(--blue);color:var(--blue);background:var(--blue-soft);}
+.lang-panel{display:none;}
+.lang-panel.active{display:block;}
 </style>
 </head>
 <body>
@@ -79,7 +84,7 @@ textarea{min-height:100px;resize:vertical;}
   <div class="page-head">
     <div class="eyebrow" id="eyebrow">Manager · Fiche artiste</div>
     <h1 id="pageTitle">Nouvel artiste</h1>
-    <p>Même structure que les pages publiques : biographie, galerie, musiques, clips et actualités. Les fans verront automatiquement cette mise en page.</p>
+    <p>Même structure que les pages publiques : biographie, galerie, musiques, clips et actualités. Les fans verront automatiquement cette mise en page dans leur langue.</p>
   </div>
 
   <div class="msg" id="msg"></div>
@@ -102,12 +107,65 @@ textarea{min-height:100px;resize:vertical;}
   </div>
 
   <div class="card">
-    <h2>Biographie</h2>
-    <p class="sub">Section « Parcours » sur la page publique</p>
-    <label for="bio_short">Bio courte</label>
-    <input type="text" id="bio_short" maxlength="300" placeholder="Une phrase pour la carte d’accueil">
-    <label for="bio_full">Bio complète (Parcours)</label>
-    <textarea id="bio_full" placeholder="Texte long de la biographie…"></textarea>
+    <h2>Biographie multi-langues</h2>
+    <p class="sub">Remplis la bio dans chaque langue. Le fan verra automatiquement sa langue.</p>
+
+    <div class="lang-tabs" id="langTabs">
+      <button type="button" class="lang-tab active" data-lang="fr">🇫🇷 Français</button>
+      <button type="button" class="lang-tab" data-lang="en">🇬🇧 English</button>
+      <button type="button" class="lang-tab" data-lang="it">🇮🇹 Italiano</button>
+      <button type="button" class="lang-tab" data-lang="de">🇩🇪 Deutsch</button>
+      <button type="button" class="lang-tab" data-lang="es">🇪🇸 Español</button>
+      <button type="button" class="lang-tab" data-lang="fi">🇫🇮 Suomi</button>
+    </div>
+
+    <!-- Français -->
+    <div class="lang-panel active" data-panel="fr">
+      <label for="bio_short">Bio courte (FR)</label>
+      <input type="text" id="bio_short" maxlength="300" placeholder="Une phrase pour la carte d’accueil">
+      <label for="bio_full">Bio complète (FR)</label>
+      <textarea id="bio_full" placeholder="Texte long de la biographie…"></textarea>
+    </div>
+
+    <!-- Anglais -->
+    <div class="lang-panel" data-panel="en">
+      <label for="bio_short_en">Short bio (EN)</label>
+      <input type="text" id="bio_short_en" maxlength="300" placeholder="One line for the home card">
+      <label for="bio_full_en">Full bio (EN)</label>
+      <textarea id="bio_full_en" placeholder="Full biography text…"></textarea>
+    </div>
+
+    <!-- Italien -->
+    <div class="lang-panel" data-panel="it">
+      <label for="bio_short_it">Bio breve (IT)</label>
+      <input type="text" id="bio_short_it" maxlength="300" placeholder="Una frase per la card">
+      <label for="bio_full_it">Bio completa (IT)</label>
+      <textarea id="bio_full_it" placeholder="Biografia completa…"></textarea>
+    </div>
+
+    <!-- Allemand -->
+    <div class="lang-panel" data-panel="de">
+      <label for="bio_short_de">Kurze Bio (DE)</label>
+      <input type="text" id="bio_short_de" maxlength="300" placeholder="Ein Satz für die Karte">
+      <label for="bio_full_de">Vollständige Bio (DE)</label>
+      <textarea id="bio_full_de" placeholder="Vollständige Biografie…"></textarea>
+    </div>
+
+    <!-- Espagnol -->
+    <div class="lang-panel" data-panel="es">
+      <label for="bio_short_es">Bio corta (ES)</label>
+      <input type="text" id="bio_short_es" maxlength="300" placeholder="Una frase para la tarjeta">
+      <label for="bio_full_es">Bio completa (ES)</label>
+      <textarea id="bio_full_es" placeholder="Biografía completa…"></textarea>
+    </div>
+
+    <!-- Finnois -->
+    <div class="lang-panel" data-panel="fi">
+      <label for="bio_short_fi">Lyhyt bio (FI)</label>
+      <input type="text" id="bio_short_fi" maxlength="300" placeholder="Yksi lause korttiin">
+      <label for="bio_full_fi">Täysi bio (FI)</label>
+      <textarea id="bio_full_fi" placeholder="Täysi elämäkerta…"></textarea>
+    </div>
   </div>
 
   <div class="card">
@@ -177,7 +235,6 @@ textarea{min-height:100px;resize:vertical;}
 (function () {
   const token = localStorage.getItem('backstage_token');
   const role = localStorage.getItem('backstage_role');
-  // manager OU admin (sinon admin renvoyé vers login)
   if (!token || (role !== 'manager' && role !== 'admin')) {
     location.replace('login.html');
     return;
@@ -194,6 +251,18 @@ textarea{min-height:100px;resize:vertical;}
     );
 
   let galleryUrls = [];
+
+  // Onglets langues
+  document.querySelectorAll('.lang-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var lang = tab.getAttribute('data-lang');
+      document.querySelectorAll('.lang-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.lang-panel').forEach(function (p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      var panel = document.querySelector('.lang-panel[data-panel="' + lang + '"]');
+      if (panel) panel.classList.add('active');
+    });
+  });
 
   function mediaUrl(url) {
     if (!url) return '';
@@ -331,8 +400,21 @@ textarea{min-height:100px;resize:vertical;}
     document.getElementById('name').value = a.name || '';
     document.getElementById('slug').value = a.slug || '';
     document.getElementById('genre').value = a.genre || '';
+
+    // Bios multi-langues
     document.getElementById('bio_short').value = a.bio_short || '';
     document.getElementById('bio_full').value = a.bio_full || '';
+    document.getElementById('bio_short_en').value = a.bio_short_en || '';
+    document.getElementById('bio_full_en').value = a.bio_full_en || '';
+    document.getElementById('bio_short_it').value = a.bio_short_it || '';
+    document.getElementById('bio_full_it').value = a.bio_full_it || '';
+    document.getElementById('bio_short_de').value = a.bio_short_de || '';
+    document.getElementById('bio_full_de').value = a.bio_full_de || '';
+    document.getElementById('bio_short_es').value = a.bio_short_es || '';
+    document.getElementById('bio_full_es').value = a.bio_full_es || '';
+    document.getElementById('bio_short_fi').value = a.bio_short_fi || '';
+    document.getElementById('bio_full_fi').value = a.bio_full_fi || '';
+
     document.getElementById('is_published').checked = a.is_published !== false;
     document.getElementById('avatarPreview').src = mediaUrl(a.avatar_url) || PLACEHOLDER;
     document.getElementById('coverPreview').src = mediaUrl(a.cover_url) || PLACEHOLDER;
@@ -363,8 +445,23 @@ textarea{min-height:100px;resize:vertical;}
     const payload = {
       name: name,
       genre: document.getElementById('genre').value.trim() || null,
+
+      // Français
       bio_short: document.getElementById('bio_short').value.trim() || null,
       bio_full: document.getElementById('bio_full').value.trim() || null,
+
+      // Multi-langues
+      bio_short_en: document.getElementById('bio_short_en').value.trim() || null,
+      bio_full_en: document.getElementById('bio_full_en').value.trim() || null,
+      bio_short_it: document.getElementById('bio_short_it').value.trim() || null,
+      bio_full_it: document.getElementById('bio_full_it').value.trim() || null,
+      bio_short_de: document.getElementById('bio_short_de').value.trim() || null,
+      bio_full_de: document.getElementById('bio_full_de').value.trim() || null,
+      bio_short_es: document.getElementById('bio_short_es').value.trim() || null,
+      bio_full_es: document.getElementById('bio_full_es').value.trim() || null,
+      bio_short_fi: document.getElementById('bio_short_fi').value.trim() || null,
+      bio_full_fi: document.getElementById('bio_full_fi').value.trim() || null,
+
       is_published: document.getElementById('is_published').checked,
       tracks: collectPairs('tracksList'),
       clips: collectPairs('clipsList'),

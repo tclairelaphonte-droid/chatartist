@@ -82,31 +82,31 @@
 
   <div class="visual">
     <img src="https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1200&q=80" alt="Concert live">
-    <div class="quote">« On ne devine plus ce que veulent les fans — on leur demande. »</div>
+    <div class="quote" data-i18n="login.quote">« On ne devine plus ce que veulent les fans — on leur demande. »</div>
   </div>
 
   <div class="form-side">
     <div class="wrap">
-      <div class="eyebrow" id="eyebrow">Espace fan</div>
-      <h1 id="title">Ravi de vous revoir</h1>
-      <p class="sub" id="subtitle">Connectez-vous pour continuer la conversation.</p>
+      <div class="eyebrow" id="eyebrow" data-i18n="login.eyebrow">Espace fan</div>
+      <h1 id="title" data-i18n="login.title">Ravi de vous revoir</h1>
+      <p class="sub" id="subtitle" data-i18n="login.subtitle">Connectez-vous pour continuer la conversation.</p>
 
       <div class="toggle">
-        <button type="button" id="tabLogin" class="active">Se connecter</button>
-        <button type="button" id="tabRegister">Créer un compte</button>
+        <button type="button" id="tabLogin" class="active" data-i18n="login.tab.login">Se connecter</button>
+        <button type="button" id="tabRegister" data-i18n="login.tab.register">Créer un compte</button>
       </div>
 
       <form id="form">
         <div class="field" id="fieldUsername">
-          <label>Nom d'utilisateur</label>
+          <label data-i18n="login.label.username">Nom d'utilisateur</label>
           <input type="text" id="usernameInput" placeholder="ex. alya.fan" autocomplete="username">
         </div>
         <div class="field show" id="fieldEmail">
-          <label>Adresse e-mail</label>
+          <label data-i18n="login.label.email">Adresse e-mail</label>
           <input type="email" id="emailInput" placeholder="vous@exemple.com" required autocomplete="email">
         </div>
         <div class="field show" id="fieldPassword">
-          <label>Mot de passe</label>
+          <label data-i18n="login.label.password">Mot de passe</label>
           <div class="password-wrap">
             <input type="password" id="passwordInput" placeholder="••••••••" required minlength="8" autocomplete="current-password">
             <button type="button" class="toggle-password" id="togglePassword" aria-label="Afficher le mot de passe" title="Afficher le mot de passe">
@@ -120,7 +120,7 @@
             </button>
           </div>
         </div>
-        <button type="submit" class="submit" id="submitBtn">Se connecter</button>
+        <button type="submit" class="submit" id="submitBtn" data-i18n="login.submit">Se connecter</button>
       </form>
 
       <div class="msg" id="msg"></div>
@@ -132,6 +132,7 @@
 </div>
 
 <script src="api.js"></script>
+<script src="langues.js"></script>
 <script>
   const params = new URLSearchParams(location.search);
   const tabLogin = document.getElementById('tabLogin');
@@ -171,21 +172,21 @@
       tabRegister.classList.add('active');
       tabLogin.classList.remove('active');
       fieldUsername.classList.add('show');
-      title.textContent = 'Rejoignez le studio';
-      subtitle.textContent = 'Créez votre compte pour discuter directement avec le management.';
-      eyebrow.textContent = 'Nouveau compte';
-      submitBtn.textContent = 'Créer mon compte';
-      hint.innerHTML = 'Déjà un compte ? <b id="hintLink">Se connecter</b>';
+      title.textContent = t('login.title.register') || 'Rejoignez le studio';
+      subtitle.textContent = t('login.subtitle.register') || 'Créez votre compte pour discuter directement avec le management.';
+      eyebrow.textContent = t('login.eyebrow.register') || 'Nouveau compte';
+      submitBtn.textContent = t('login.submit.register') || 'Créer mon compte';
+      hint.innerHTML = (t('login.hint.register') || 'Déjà un compte ?') + ' <b id="hintLink">' + (t('login.tab.login') || 'Se connecter') + '</b>';
       passwordInput.setAttribute('autocomplete', 'new-password');
     } else {
       tabLogin.classList.add('active');
       tabRegister.classList.remove('active');
       fieldUsername.classList.remove('show');
-      title.textContent = 'Ravi de vous revoir';
-      subtitle.textContent = 'Connectez-vous pour continuer la conversation.';
-      eyebrow.textContent = 'Espace fan';
-      submitBtn.textContent = 'Se connecter';
-      hint.innerHTML = 'Pas encore de compte ? <b id="hintLink">Créer un compte</b>';
+      title.textContent = t('login.title') || 'Ravi de vous revoir';
+      subtitle.textContent = t('login.subtitle') || 'Connectez-vous pour continuer la conversation.';
+      eyebrow.textContent = t('login.eyebrow') || 'Espace fan';
+      submitBtn.textContent = t('login.submit') || 'Se connecter';
+      hint.innerHTML = (t('login.hint.login') || 'Pas encore de compte ?') + ' <b id="hintLink">' + (t('login.tab.register') || 'Créer un compte') + '</b>';
       passwordInput.setAttribute('autocomplete', 'current-password');
     }
     document.getElementById('hintLink').addEventListener('click', () => {
@@ -207,11 +208,11 @@
     const isRegister = tabRegister.classList.contains('active');
 
     if (isRegister && !username) {
-      showMsg("Choisissez un nom d'utilisateur.", 'error');
+      showMsg(t('login.error.username') || "Choisissez un nom d'utilisateur.", 'error');
       return;
     }
     if (password.length < 8) {
-      showMsg('Le mot de passe doit faire au moins 8 caractères.', 'error');
+      showMsg(t('login.error.password') || 'Le mot de passe doit faire au moins 8 caractères.', 'error');
       return;
     }
 
@@ -222,7 +223,7 @@
 
     submitBtn.disabled = true;
     const oldLabel = submitBtn.textContent;
-    submitBtn.textContent = isRegister ? 'Création…' : 'Connexion…';
+    submitBtn.textContent = isRegister ? (t('login.loading.register') || 'Création…') : (t('login.loading.login') || 'Connexion…');
 
     try {
       let data;
@@ -246,12 +247,12 @@
       localStorage.setItem('backstage_role', me.role);
 
       showMsg(
-        isRegister ? 'Compte créé ! Redirection…' : 'Connexion réussie ! Redirection…',
+        isRegister ? (t('login.success.register') || 'Compte créé ! Redirection…') : (t('login.success.login') || 'Connexion réussie ! Redirection…'),
         'info'
       );
 
       const next = params.get('next');
-            setTimeout(function () {
+      setTimeout(function () {
         if (next) {
           window.location.href = decodeURIComponent(next);
         } else if (me.role === 'admin') {
@@ -263,7 +264,7 @@
         }
       }, 500);
     } catch (err) {
-      showMsg(err.message || 'Impossible de se connecter. Vérifie que le backend tourne.', 'error');
+      showMsg(err.message || (t('login.error.generic') || 'Impossible de se connecter. Vérifie que le backend tourne.'), 'error');
       submitBtn.disabled = false;
       submitBtn.textContent = oldLabel;
     }

@@ -112,7 +112,7 @@
 
 <nav>
   <span class="logo"><span>◆</span> Backstage</span>
-  <a href="index.html" class="back">← Tous les artistes</a>
+  <a href="index.html" class="back" data-i18n="artist.back">← Tous les artistes</a>
 </nav>
 
 <div class="cover">
@@ -127,57 +127,57 @@
       <h1 id="name"></h1>
       <p class="bio-short" id="bioShort"></p>
     </div>
-    <div class="cta"><a class="btn primary" id="discussBtn" href="#">Discuter avec l'artiste</a></div>
+    <div class="cta"><a class="btn primary" id="discussBtn" href="#" data-i18n="artist.discuss">Discuter avec l'artiste</a></div>
   </div>
 </div>
 
 <main>
 
   <section class="reveal" id="secBio">
-    <div class="eyebrow">Biographie</div>
-    <h2>Parcours</h2>
+    <div class="eyebrow" data-i18n="artist.bio.eyebrow">Biographie</div>
+    <h2 data-i18n="artist.bio.title">Parcours</h2>
     <p class="desc" id="bioFull"></p>
   </section>
 
   <section class="reveal" id="secPhotos">
-    <div class="eyebrow">Galerie</div>
-    <h2>Photos</h2>
+    <div class="eyebrow" data-i18n="artist.photos.eyebrow">Galerie</div>
+    <h2 data-i18n="artist.photos.title">Photos</h2>
     <div class="grid-photos" id="photos"></div>
   </section>
 
   <section class="reveal" id="secTracks">
-    <div class="eyebrow">Discographie</div>
-    <h2>Musiques</h2>
+    <div class="eyebrow" data-i18n="artist.tracks.eyebrow">Discographie</div>
+    <h2 data-i18n="artist.tracks.title">Musiques</h2>
     <div class="track-list" id="tracks"></div>
   </section>
 
   <section class="reveal" id="secClips">
-    <div class="eyebrow">Vidéo</div>
-    <h2>Clips</h2>
+    <div class="eyebrow" data-i18n="artist.clips.eyebrow">Vidéo</div>
+    <h2 data-i18n="artist.clips.title">Clips</h2>
     <div class="clip-grid" id="clips"></div>
   </section>
 
   <section class="reveal" id="secNews">
-    <div class="eyebrow">Suivi</div>
-    <h2>Actualités</h2>
+    <div class="eyebrow" data-i18n="artist.news.eyebrow">Suivi</div>
+    <h2 data-i18n="artist.news.title">Actualités</h2>
     <div id="news"></div>
   </section>
 
   <section class="reveal">
     <div class="cta-block">
-      <h3>Une idée pour le prochain clip ?</h3>
-      <p>Chaque message est lu directement par l'artiste.</p>
-      <a class="btn primary" id="discussBtn2" href="#">Discuter avec l'artiste</a>
+      <h3 data-i18n="artist.cta.title">Une idée pour le prochain clip ?</h3>
+      <p data-i18n="artist.cta.text">Chaque message est lu directement par l'artiste.</p>
+      <a class="btn primary" id="discussBtn2" href="#" data-i18n="artist.discuss">Discuter avec l'artiste</a>
     </div>
   </section>
 
 </main>
 
-<footer>backstage — plateforme communautaire officielle</footer>
+<footer data-i18n="footer.meta">backstage — plateforme communautaire officielle</footer>
 
 <script src="api.js"></script>
+<script src="langues.js"></script>
 <script>
-  // Secours UNIQUEMENT pour tes 3 artistes seed (si rien en base encore)
   const ARTISTS_LOCAL = {
     "bruce springsteen": {
       photos: ["assets/artiste1/photo1.jpg","assets/artiste1/photo2.jpg","assets/artiste1/photo3.jpg","assets/artiste1/photo4.jpg"],
@@ -263,6 +263,27 @@
       .replace(/"/g, "&quot;");
   }
 
+  // =========================================================
+  // Choisir la bonne bio selon la langue
+  // =========================================================
+  function getLocalizedBio(artist, type) {
+    // type = "short" ou "full"
+    var lang = (typeof currentLang !== "undefined" && currentLang) ? currentLang : "fr";
+
+    if (lang === "fr") {
+      return type === "short" ? (artist.bio_short || "") : (artist.bio_full || "");
+    }
+
+    var shortKey = "bio_short_" + lang;
+    var fullKey = "bio_full_" + lang;
+
+    if (type === "short") {
+      return artist[shortKey] || artist.bio_short || "";
+    } else {
+      return artist[fullKey] || artist.bio_full || "";
+    }
+  }
+
   function renderPage(a, artistId) {
     document.getElementById("coverImg").src = a.cover || PLACEHOLDER_COVER;
     document.getElementById("avatar").src = a.avatar || PLACEHOLDER_AVATAR;
@@ -339,6 +360,10 @@
       }, { threshold: 0.1 });
       io.observe(el);
     });
+
+    if (typeof applyTranslations === "function") {
+      applyTranslations();
+    }
   }
 
   function hasList(arr) {
@@ -359,15 +384,12 @@
       var artist = await api("/artists/" + encodeURIComponent(id));
       var rich = findLocalRich(artist.name);
 
-      // 1) Médias API d'abord
       var cover = mediaUrl(artist.cover_url) || PLACEHOLDER_COVER;
       var avatar = mediaUrl(artist.avatar_url) || PLACEHOLDER_AVATAR;
 
-      // 2) Secours seed seulement si pas d'upload
       if (!artist.cover_url && rich && rich.cover) cover = rich.cover;
       if (!artist.avatar_url && rich && rich.avatar) avatar = rich.avatar;
 
-      // 3) Contenu riche : API prioritaire, sinon seed local, sinon vide
       var photos = hasList(artist.gallery)
         ? artist.gallery
         : (rich && rich.photos ? rich.photos : []);
@@ -384,14 +406,18 @@
         ? artist.news
         : (rich && rich.news ? rich.news : []);
 
+      // Choisir la bio selon la langue
+      var bioShort = getLocalizedBio(artist, "short");
+      var bioFull = getLocalizedBio(artist, "full");
+
       renderPage(
         {
           role: artist.genre || "",
           name: artist.name || "",
           cover: cover,
           avatar: avatar,
-          bioShort: artist.bio_short || "",
-          bioFull: artist.bio_full || "",
+          bioShort: bioShort,
+          bioFull: bioFull,
           photos: photos,
           tracks: tracks,
           clips: clips,

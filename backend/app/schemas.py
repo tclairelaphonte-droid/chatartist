@@ -69,8 +69,23 @@ class ArtistOut(BaseModel):
     slug: str
     name: str
     genre: Optional[str] = None
+
+    # Français (par défaut)
     bio_short: Optional[str] = None
     bio_full: Optional[str] = None
+
+    # Multi-langues
+    bio_short_en: Optional[str] = None
+    bio_full_en: Optional[str] = None
+    bio_short_it: Optional[str] = None
+    bio_full_it: Optional[str] = None
+    bio_short_de: Optional[str] = None
+    bio_full_de: Optional[str] = None
+    bio_short_es: Optional[str] = None
+    bio_full_es: Optional[str] = None
+    bio_short_fi: Optional[str] = None
+    bio_full_fi: Optional[str] = None
+
     avatar_url: Optional[str] = None
     cover_url: Optional[str] = None
     is_published: bool = True
@@ -95,8 +110,21 @@ class ArtistCreateIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     slug: Optional[str] = Field(default=None, min_length=1, max_length=60)
     genre: Optional[str] = Field(default=None, max_length=120)
+
     bio_short: Optional[str] = Field(default=None, max_length=300)
     bio_full: Optional[str] = None
+
+    bio_short_en: Optional[str] = Field(default=None, max_length=300)
+    bio_full_en: Optional[str] = None
+    bio_short_it: Optional[str] = Field(default=None, max_length=300)
+    bio_full_it: Optional[str] = None
+    bio_short_de: Optional[str] = Field(default=None, max_length=300)
+    bio_full_de: Optional[str] = None
+    bio_short_es: Optional[str] = Field(default=None, max_length=300)
+    bio_full_es: Optional[str] = None
+    bio_short_fi: Optional[str] = Field(default=None, max_length=300)
+    bio_full_fi: Optional[str] = None
+
     avatar_url: Optional[str] = Field(default=None, max_length=500)
     cover_url: Optional[str] = Field(default=None, max_length=500)
     is_published: bool = True
@@ -110,8 +138,21 @@ class ArtistUpdateIn(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=120)
     slug: Optional[str] = Field(default=None, min_length=1, max_length=60)
     genre: Optional[str] = Field(default=None, max_length=120)
+
     bio_short: Optional[str] = Field(default=None, max_length=300)
     bio_full: Optional[str] = None
+
+    bio_short_en: Optional[str] = Field(default=None, max_length=300)
+    bio_full_en: Optional[str] = None
+    bio_short_it: Optional[str] = Field(default=None, max_length=300)
+    bio_full_it: Optional[str] = None
+    bio_short_de: Optional[str] = Field(default=None, max_length=300)
+    bio_full_de: Optional[str] = None
+    bio_short_es: Optional[str] = Field(default=None, max_length=300)
+    bio_full_es: Optional[str] = None
+    bio_short_fi: Optional[str] = Field(default=None, max_length=300)
+    bio_full_fi: Optional[str] = None
+
     avatar_url: Optional[str] = Field(default=None, max_length=500)
     cover_url: Optional[str] = Field(default=None, max_length=500)
     is_published: Optional[bool] = None
