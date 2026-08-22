@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime, timezone
 
@@ -40,8 +41,13 @@ router = APIRouter(prefix="/manager", tags=["manager"])
 
 
 # ---------------------------------------------------------------------------
-# CLOUDINARY
+# CLOUDINARY (upload NON SIGNE, comme pour l'avatar / les fans)
 # ---------------------------------------------------------------------------
+
+CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET", "chatartist_uploads")
+
+cloudinary.config(cloud_name=CLOUD_NAME, secure=True)
 
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
@@ -83,11 +89,11 @@ def _save_chat_image(file: UploadFile) -> str:
         )
 
     try:
-        result = cloudinary.uploader.upload(
+        result = cloudinary.uploader.unsigned_upload(
             data,
+            UPLOAD_PRESET,
             folder="artistchat/chat",
             resource_type="image",
-            secure=True,
         )
 
         secure_url = result.get("secure_url")

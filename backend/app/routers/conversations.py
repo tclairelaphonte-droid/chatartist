@@ -1,3 +1,5 @@
+import os
+
 import cloudinary
 import cloudinary.uploader
 
@@ -20,15 +22,13 @@ from app.ws_manager import manager as ws_manager
 
 
 # ---------------------------------------------------------------------------
-# Configuration Cloudinary (IMPORTANT)
+# Configuration Cloudinary (upload NON SIGNE, comme pour l'avatar)
 # ---------------------------------------------------------------------------
 
-cloudinary.config(
-    cloud_name=settings.cloudinary_cloud_name,
-    api_key=settings.cloudinary_api_key,
-    api_secret=settings.cloudinary_api_secret,
-    secure=True,
-)
+CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET", "chatartist_uploads")
+
+cloudinary.config(cloud_name=CLOUD_NAME, secure=True)
 
 
 router = APIRouter(
@@ -81,8 +81,9 @@ def _save_chat_image(file: UploadFile) -> str:
         )
 
     try:
-        result = cloudinary.uploader.upload(
+        result = cloudinary.uploader.unsigned_upload(
             data,
+            UPLOAD_PRESET,
             folder="artistchat/chat",
             resource_type="image",
         )
