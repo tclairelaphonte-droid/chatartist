@@ -26,24 +26,19 @@ ALLOWED_TYPES = {
 MAX_BYTES = settings.max_upload_size_mb * 1024 * 1024
 
 
-# Cloudinary utilise les 3 variables d'environnement séparées
-# configurées dans Vercel.
-
-# DEBUG TEMPORAIRE :
-# On vérifie que les variables sont bien chargées en production
-# sans jamais afficher le contenu du secret.
+# Debug temporaire : confirme si CLOUDINARY_URL est bien chargée en prod.
+# A retirer une fois le problème résolu.
+_cloudinary_url_debug = os.getenv("CLOUDINARY_URL")
 print(
-    f"DEBUG Cloudinary → "
-    f"cloud_name={os.getenv('CLOUDINARY_CLOUD_NAME')!r}, "
-    f"api_key_present={bool(os.getenv('CLOUDINARY_API_KEY'))}, "
-    f"api_key_len={len(os.getenv('CLOUDINARY_API_KEY') or '')}, "
-    f"api_secret_len={len(os.getenv('CLOUDINARY_API_SECRET') or '')}"
+    f"DEBUG CLOUDINARY_URL present={_cloudinary_url_debug is not None}, "
+    f"len={len(_cloudinary_url_debug or '')}"
 )
 
+# Cloudinary utilise directement la variable d'environnement
+# CLOUDINARY_URL configurée dans Vercel (une seule variable,
+# format: cloudinary://<api_key>:<api_secret>@<cloud_name>).
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    cloudinary_url=_cloudinary_url_debug,
     secure=True,
 )
 
