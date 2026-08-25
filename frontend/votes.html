@@ -66,7 +66,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:18px 3
   color:#0a0a0b;font-weight:700;font-size:13px;
 }
 
-/* Modal paiement */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;align-items:center;justify-content:center;padding:20px;}
 .overlay.show{display:flex;}
 .modal{
@@ -96,11 +95,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:18px 3
 .msg-box{display:none;padding:14px;border-radius:12px;font-size:13.5px;line-height:1.5;margin-top:14px;}
 .msg-box.show{display:block;}
 .msg-box.info{background:rgba(212,175,55,.1);border:1px solid var(--border);color:var(--gold-light);}
-.msg-box.ok{background:rgba(26,156,94,.12);border:1px solid rgba(26,156,94,.35);color:#7dcea0;}
+.msg-box.err{background:rgba(225,29,60,.12);border:1px solid rgba(225,29,60,.35);color:#f0a0a8;}
 .btn-gold{
   display:inline-block;width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;margin-top:12px;
   background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#0a0a0b;font-weight:700;font-size:14px;
 }
+.btn-gold:disabled{opacity:.6;cursor:not-allowed;}
 .btn-outline{
   display:inline-block;width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);
   background:transparent;color:var(--ink);font-weight:600;font-size:13px;cursor:pointer;margin-top:10px;text-align:center;
@@ -126,7 +126,7 @@ footer span{color:var(--gold);}
 <div class="content">
 <nav>
   <a href="index.html" class="logo"><span>◆</span> Backstage Legends</a>
-  <a href="index.html" class="back">← Tous les artistes</a>
+  <a href="#" class="back" id="backArtist">← Profil artiste</a>
 </nav>
 
 <div class="hero-artist">
@@ -182,16 +182,13 @@ footer span{color:var(--gold);}
 <footer><span>◆</span> Backstage Legends — vote premium international</footer>
 </div>
 
-<!-- MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal" id="modal">
     <button class="close" id="closeModal" type="button">×</button>
 
-    <!-- Étape choix moyen -->
     <div id="stepPay">
       <h2 id="modalTitle">Paiement</h2>
       <p class="sub" id="modalSub">Choisissez votre mode de paiement.</p>
-
       <div id="paySmall">
         <div class="pay-option" id="optInstant">
           <h3>Achat instantané (carte / boutique)</h3>
@@ -202,68 +199,57 @@ footer span{color:var(--gold);}
           <p>Achetez en supermarché, photographiez le code au dos, puis déposez la photo ici.</p>
         </div>
       </div>
-
       <div id="payVip" class="hidden">
-        <div class="pay-option" data-vip="paypal">
-          <h3>PayPal</h3>
-          <p>Un comptable vous transmettra les instructions de paiement.</p>
-        </div>
-        <div class="pay-option" data-vip="postepay">
-          <h3>PostePay</h3>
-          <p>Un comptable vous transmettra les instructions de paiement.</p>
-        </div>
-        <div class="pay-option" data-vip="bank">
-          <h3>Virement bancaire</h3>
-          <p>Un comptable vous enverra le RIB sur lequel effectuer le paiement.</p>
-        </div>
+        <div class="pay-option" data-vip="paypal"><h3>PayPal</h3><p>Un comptable vous transmettra les instructions.</p></div>
+        <div class="pay-option" data-vip="postepay"><h3>PostePay</h3><p>Un comptable vous transmettra les instructions.</p></div>
+        <div class="pay-option" data-vip="bank"><h3>Virement bancaire</h3><p>Un comptable vous enverra le RIB.</p></div>
       </div>
     </div>
 
-    <!-- Instantané -->
     <div id="stepInstant" class="hidden">
       <h2>Achat instantané</h2>
-      <p class="sub">Choisissez une boutique officielle, puis revenez déposer votre preuve de paiement.</p>
+      <p class="sub">Choisissez une boutique, puis déposez votre preuve de paiement.</p>
       <div class="store-links">
         <a href="https://www.amazon.fr" target="_blank" rel="noopener">Amazon →</a>
         <a href="https://www.apple.com/fr/shop" target="_blank" rel="noopener">Apple Store →</a>
         <a href="https://play.google.com/store" target="_blank" rel="noopener">Google Play Store →</a>
       </div>
       <div class="upload-box">
-        <p style="font-size:13px;color:var(--muted);">Déposez la capture / photo de votre paiement</p>
+        <p style="font-size:13px;color:var(--muted);">Capture / photo du paiement</p>
         <input type="file" id="proofInstant" accept="image/*">
       </div>
+      <div class="msg-box err" id="errInstant"></div>
       <button class="btn-gold" type="button" id="submitInstant">Valider mon vote</button>
     </div>
 
-    <!-- Physique -->
     <div id="stepPhysical" class="hidden">
       <h2>Carte cadeau physique</h2>
-      <p class="sub">Rendez-vous dans n’importe quel supermarché ou point de vente. Une fois la carte en main, prenez une photo nette du code au dos et téléchargez-la ici.</p>
+      <p class="sub">Photo nette du code au dos de la carte.</p>
       <div class="upload-box">
-        <p style="font-size:13px;color:var(--muted);">Photo du code (carte cadeau)</p>
+        <p style="font-size:13px;color:var(--muted);">Photo du code</p>
         <input type="file" id="proofPhysical" accept="image/*">
       </div>
+      <div class="msg-box err" id="errPhysical"></div>
       <button class="btn-gold" type="button" id="submitPhysical">Valider mon vote</button>
     </div>
 
-    <!-- VIP message RIB -->
     <div id="stepVipInfo" class="hidden">
       <h2>Paiement grand montant</h2>
-      <p class="sub" id="vipMsg">Un comptable va vous transmettre le RIB / les instructions sur lequel effectuer votre paiement. Après le virement, déposez la capture d’écran ici.</p>
+      <p class="sub" id="vipMsg">Un comptable va transmettre le RIB. La conversation avec le management sera ouverte.</p>
       <div class="msg-box info show">Mode sélectionné : <strong id="vipMethod">—</strong></div>
       <div class="upload-box">
-        <p style="font-size:13px;color:var(--muted);">Capture de votre paiement</p>
+        <p style="font-size:13px;color:var(--muted);">Capture du paiement (optionnel pour démarrer, recommandée après virement)</p>
         <input type="file" id="proofVip" accept="image/*">
       </div>
+      <div class="msg-box err" id="errVip"></div>
       <button class="btn-gold" type="button" id="submitVip">Valider mon vote VVIP</button>
     </div>
 
-    <!-- Succès -->
     <div id="stepSuccess" class="hidden">
       <div class="success-panel">
         <div class="icon">✦</div>
         <h2>Félicitations</h2>
-        <p id="successText">Vous avez voté pour votre artiste. Vous serez invité(e) à la remise des trophées.</p>
+        <p id="successText">Votre vote a été enregistré.</p>
         <a class="btn-gold" id="contactBtn" href="#">Contacter l’artiste</a>
         <a class="btn-outline" href="index.html">Retour aux artistes</a>
       </div>
@@ -289,6 +275,14 @@ footer span{color:var(--gold);}
   var artistId = params.get('id');
   var artistName = 'Artiste';
   var selected = null;
+  var vipMethod = null;
+
+  var API =
+    (typeof API_BASE !== 'undefined' && API_BASE)
+      ? API_BASE
+      : (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+          ? 'http://127.0.0.1:8000'
+          : 'https://chatartist-backastage.vercel.app');
 
   var PLACEHOLDER =
     'data:image/svg+xml,' +
@@ -298,8 +292,18 @@ footer span{color:var(--gold);}
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
     if (url.startsWith('assets/')) return url;
-    if (typeof API_BASE !== 'undefined') return url.startsWith('/') ? API_BASE + url : API_BASE + '/' + url;
-    return url;
+    return API + (url.startsWith('/') ? url : '/' + url);
+  }
+
+  function requireFan() {
+    var token = localStorage.getItem('backstage_token');
+    var role = localStorage.getItem('backstage_role');
+    if (!token || role === 'manager' || role === 'admin') {
+      var next = encodeURIComponent('vote.html?id=' + (artistId || ''));
+      location.href = 'login.html?next=' + next;
+      return false;
+    }
+    return true;
   }
 
   function showStep(id) {
@@ -310,7 +314,9 @@ footer span{color:var(--gold);}
   }
 
   function openModal(pack) {
+    if (!requireFan()) return;
     selected = pack;
+    vipMethod = null;
     document.getElementById('modalTitle').textContent = pack.votes + ' votes — ' + pack.price + ' €';
     document.getElementById('modalSub').textContent = 'Pour ' + artistName + ' · choisissez votre mode de paiement.';
     document.getElementById('paySmall').classList.toggle('hidden', pack.tier === 'vip');
@@ -328,15 +334,80 @@ footer span{color:var(--gold);}
     if (isVip) {
       text.textContent =
         'Félicitations ! Votre vote VVIP pour ' + artistName +
-        ' a bien été enregistré. Vous recevrez une invitation premium VVIP pour la remise des prix.';
+        ' est enregistré. Une conversation a été ouverte avec le management (message RIB). Invitation VVIP pour la remise des prix.';
     } else {
       text.textContent =
         'Félicitations ! Vous avez voté pour ' + artistName +
-        '. Vous serez invité(e) à la remise des trophées.';
+        '. La preuve a été envoyée au management. Vous serez invité(e) à la remise des trophées.';
     }
     document.getElementById('contactBtn').href =
       'fan-messages.html?artist=' + encodeURIComponent(artistId);
     showStep('stepSuccess');
+  }
+
+  async function submitProof(paymentMethod, fileInputId, btn, errId, isVip) {
+    var errEl = document.getElementById(errId);
+    if (errEl) {
+      errEl.classList.remove('show');
+      errEl.textContent = '';
+    }
+
+    var fileInput = fileInputId ? document.getElementById(fileInputId) : null;
+    var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!isVip && !file) {
+      if (errEl) {
+        errEl.textContent = 'Veuillez déposer une photo / capture de paiement.';
+        errEl.classList.add('show');
+      }
+      return;
+    }
+
+    var token = localStorage.getItem('backstage_token');
+    if (!token) {
+      requireFan();
+      return;
+    }
+
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Envoi…';
+
+    try {
+      var fd = new FormData();
+      fd.append('artist_id', artistId);
+      fd.append('votes', String(selected.votes));
+      fd.append('price_eur', String(selected.price));
+      fd.append('tier', selected.tier === 'vip' ? 'vip' : 'small');
+      fd.append('payment_method', paymentMethod);
+      if (file) fd.append('file', file);
+
+      var res = await fetch(API + '/votes/proof', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: fd
+      });
+
+      var data = null;
+      try { data = await res.json(); } catch (e) {}
+
+      if (!res.ok) {
+        var detail = (data && data.detail) || ('Erreur ' + res.status);
+        if (Array.isArray(detail)) detail = detail.map(function (d) { return d.msg || JSON.stringify(d); }).join(', ');
+        throw new Error(detail);
+      }
+
+      completeVote(isVip);
+    } catch (err) {
+      if (errEl) {
+        errEl.textContent = err.message || 'Impossible d’envoyer la preuve.';
+        errEl.classList.add('show');
+      } else {
+        alert(err.message || 'Impossible d’envoyer la preuve.');
+      }
+      btn.disabled = false;
+      btn.textContent = old;
+    }
   }
 
   document.getElementById('closeModal').onclick = closeModal;
@@ -360,37 +431,29 @@ footer span{color:var(--gold);}
 
   document.querySelectorAll('#payVip .pay-option').forEach(function (opt) {
     opt.onclick = function () {
-      var method = opt.getAttribute('data-vip');
+      vipMethod = opt.getAttribute('data-vip');
       var labels = { paypal: 'PayPal', postepay: 'PostePay', bank: 'Virement bancaire' };
-      document.getElementById('vipMethod').textContent = labels[method] || method;
+      document.getElementById('vipMethod').textContent = labels[vipMethod] || vipMethod;
       document.getElementById('vipMsg').textContent =
-        'Un comptable va vous transmettre le RIB / les instructions pour votre paiement (' +
-        (labels[method] || method) +
-        '). Après le paiement, déposez la capture d’écran ci-dessous.';
+        'Un comptable va transmettre le RIB pour votre paiement (' +
+        (labels[vipMethod] || vipMethod) +
+        '). La conversation management sera ouverte. Déposez la capture après le virement.';
       showStep('stepVipInfo');
     };
   });
 
-  function needFile(inputId) {
-    var f = document.getElementById(inputId).files[0];
-    if (!f) {
-      alert('Veuillez déposer une photo / capture de votre paiement.');
-      return false;
-    }
-    return true;
-  }
-
   document.getElementById('submitInstant').onclick = function () {
-    if (!needFile('proofInstant')) return;
-    completeVote(false);
+    submitProof('instant', 'proofInstant', this, 'errInstant', false);
   };
   document.getElementById('submitPhysical').onclick = function () {
-    if (!needFile('proofPhysical')) return;
-    completeVote(false);
+    submitProof('physical', 'proofPhysical', this, 'errPhysical', false);
   };
   document.getElementById('submitVip').onclick = function () {
-    if (!needFile('proofVip')) return;
-    completeVote(true);
+    if (!vipMethod) {
+      alert('Choisissez un mode de paiement VIP.');
+      return;
+    }
+    submitProof(vipMethod, 'proofVip', this, 'errVip', true);
   };
 
   (async function init() {
@@ -398,6 +461,7 @@ footer span{color:var(--gold);}
       location.href = 'index.html';
       return;
     }
+    document.getElementById('backArtist').href = 'artist.html?id=' + encodeURIComponent(artistId);
     try {
       if (typeof api !== 'function') throw new Error('api.js manquant');
       var artist = await api('/artists/' + encodeURIComponent(artistId));

@@ -3,273 +3,288 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Connexion — Backstage</title>
+<title>Connexion — Backstage Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#ffffff; --surface:#f6f6f8; --surface-2:#eeeef1; --border:#e7e7ec;
-    --ink:#17171b; --muted:#6e6e79;
-    --red:#e11d3c; --red-dark:#b91530; --red-soft:rgba(225,29,60,.08);
-    --blue:#2457e8; --blue-soft:rgba(36,87,232,.08);
-    --font-display:'Fraunces',serif; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
-    --shadow-sm:0 2px 10px rgba(23,23,27,.05); --shadow-md:0 20px 50px rgba(23,23,27,.10);
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:var(--font-body);
-    display:flex; flex-direction:column; align-items:center;
-  }
-  a{color:inherit;}
-  nav{width:100%; padding:22px 48px; border-bottom:1px solid var(--border); box-sizing:border-box;}
-  .logo{font-family:var(--font-display); font-style:italic; font-weight:600; font-size:20px; text-decoration:none;}
-  .logo span{color:var(--red); font-style:normal;}
+:root{
+  --bg:#0a0a0b; --surface:#121214; --surface-2:#1a1a1e;
+  --border:rgba(212,175,55,.22);
+  --gold:#d4af37; --gold-light:#f0d77b; --gold-dark:#a8861f;
+  --ink:#f5f0e6; --muted:#9a958c;
+  --font-display:'Cinzel',serif; --font-body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); display:flex; flex-direction:column; align-items:center;
+  position:relative; overflow-x:hidden;
+}
+a{color:inherit; text-decoration:none;}
 
-  .split{width:100%; flex:1; display:flex;}
-  .visual{flex:1; position:relative; overflow:hidden; display:none;}
-  .visual img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
-  .visual::after{content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(10,8,14,.35), rgba(10,8,14,0) 55%);}
-  .visual .quote{position:absolute; bottom:44px; left:44px; right:44px; color:#fff; font-family:var(--font-display); font-style:italic; font-size:21px; line-height:1.4; text-shadow:0 2px 14px rgba(0,0,0,.4);}
+.bg-effects{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;}
+.glow{position:absolute; border-radius:50%; filter:blur(80px); opacity:.3;}
+.glow-1{width:400px; height:400px; top:-10%; left:10%; background:radial-gradient(circle,rgba(212,175,55,.4),transparent 70%);}
+.glow-2{width:300px; height:300px; bottom:5%; right:5%; background:radial-gradient(circle,rgba(240,215,123,.25),transparent 70%);}
 
-  .form-side{flex:1; display:flex; align-items:center; justify-content:center; padding:40px;}
-  .wrap{max-width:400px; width:100%;}
-  .eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--blue); margin-bottom:12px;}
-  h1{font-family:var(--font-display); font-size:32px; font-weight:600; margin:0 0 8px;}
-  .sub{color:var(--muted); font-size:14.5px; margin:0 0 34px;}
+nav{
+  position:relative; z-index:2; width:100%; padding:20px 40px;
+  border-bottom:1px solid var(--border); background:rgba(10,10,11,.85); backdrop-filter:blur(12px);
+}
+.logo{font-family:var(--font-display); font-weight:600; font-size:18px; color:var(--gold);}
+.logo span{color:var(--gold-light);}
 
-  .toggle{display:flex; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:4px; margin-bottom:32px;}
-  .toggle button{flex:1; border:none; background:transparent; color:var(--muted); font-family:var(--font-body); font-weight:600; font-size:13.5px; padding:10px; border-radius:999px; cursor:pointer; transition:all .2s ease;}
-  .toggle button.active{background:#fff; color:var(--ink); box-shadow:var(--shadow-sm);}
+.wrap{
+  position:relative; z-index:2; width:100%; max-width:420px;
+  margin:auto; padding:48px 24px 60px;
+}
+.eyebrow{
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--gold); margin-bottom:12px;
+}
+h1{font-family:var(--font-display); font-size:28px; font-weight:600; margin:0 0 8px; color:var(--gold-light);}
+.sub{color:var(--muted); font-size:14px; margin:0 0 28px; line-height:1.5;}
 
-  form{display:flex; flex-direction:column; gap:16px;}
-  label{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:block;}
-  input{width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--ink); font-family:var(--font-body); font-size:14.5px;}
-  input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-soft);}
-  .field{display:none;}
-  .field.show{display:block;}
+.mode-btn{
+  width:100%; display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; margin-bottom:12px; border-radius:14px; cursor:pointer;
+  border:1px solid var(--border); background:rgba(18,18,20,.9);
+  color:var(--ink); font-weight:600; font-size:14px; transition:all .25s;
+  font-family:var(--font-body);
+}
+.mode-btn:hover{border-color:var(--gold); background:rgba(212,175,55,.08);}
+.mode-btn.active{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold);}
+.mode-btn .arrow{color:var(--gold); transition:transform .25s; font-size:12px;}
+.mode-btn.active .arrow{transform:rotate(180deg);}
 
-  .password-wrap{position:relative;}
-  .password-wrap input{padding-right:46px;}
-  .toggle-password{
-    position:absolute; right:12px; top:50%; transform:translateY(-50%);
-    background:none; border:none; padding:4px; cursor:pointer; color:var(--muted);
-    display:flex; align-items:center; justify-content:center; border-radius:6px;
-    transition:color .15s ease, background .15s ease;
-  }
-  .toggle-password:hover{color:var(--ink); background:var(--surface);}
-  .toggle-password svg{width:20px; height:20px; pointer-events:none;}
+.panel{
+  max-height:0; overflow:hidden; opacity:0;
+  transition:max-height .35s ease, opacity .25s ease, margin .25s ease;
+  margin-bottom:0;
+}
+.panel.open{max-height:420px; opacity:1; margin-bottom:16px;}
 
-  .submit{margin-top:8px; padding:14px; border-radius:10px; border:1px solid var(--red); background:var(--red); color:#fff; font-weight:700; font-size:14.5px; cursor:pointer; transition:all .2s ease;}
-  .submit:hover{background:var(--red-dark); border-color:var(--red-dark); box-shadow:0 8px 20px rgba(225,29,60,.25);}
-  .submit:disabled{opacity:.6; cursor:not-allowed; transform:none; box-shadow:none;}
+.panel-inner{
+  border:1px solid var(--border); border-radius:14px; padding:18px;
+  background:rgba(18,18,20,.95); margin-top:4px;
+}
+label{display:block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+input{
+  width:100%; padding:12px 14px; border-radius:10px; margin-bottom:12px;
+  border:1px solid var(--border); background:var(--surface); color:var(--ink);
+  font-size:15px; font-family:inherit;
+}
+input:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.12);}
 
-  .hint{text-align:center; font-size:13px; color:var(--muted); margin-top:22px;}
-  .hint b{color:var(--blue); font-weight:600; cursor:pointer;}
+.password-wrap{position:relative;}
+.password-wrap input{padding-right:44px; margin-bottom:12px;}
+.toggle-password{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; font-size:14px;
+}
+.toggle-password:hover{color:var(--gold-light);}
 
-  .msg{display:none; margin-top:18px; padding:12px 14px; border-radius:10px; font-size:13.5px;}
-  .msg.info{background:var(--blue-soft); border:1px solid var(--blue); color:var(--blue);}
-  .msg.error{background:var(--red-soft); border:1px solid var(--red); color:var(--red);}
+.submit{
+  width:100%; padding:13px; border:none; border-radius:12px; cursor:pointer;
+  font-weight:700; font-size:14px;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dark));
+  color:#0a0a0b; transition:filter .2s;
+}
+.submit:hover{filter:brightness(1.08);}
+.submit:disabled{opacity:.6; cursor:not-allowed;}
 
-  @media (min-width:860px){ .visual{display:block;} }
+.msg{display:none; margin-top:16px; padding:12px 14px; border-radius:10px; font-size:13.5px; line-height:1.4;}
+.msg.show{display:block;}
+.msg.info{background:rgba(212,175,55,.1); border:1px solid var(--border); color:var(--gold-light);}
+.msg.error{background:rgba(225,29,60,.12); border:1px solid rgba(225,29,60,.35); color:#f0a0a8;}
+
+.hint{text-align:center; margin-top:24px; font-size:13px; color:var(--muted);}
+.hint a{color:var(--gold-light); font-weight:600;}
 </style>
 </head>
 <body>
 
-<nav><a class="logo" href="index.html"><span>◆</span> Backstage</a></nav>
+<div class="bg-effects">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+</div>
 
-<div class="split">
+<nav>
+  <a class="logo" href="index.html"><span>◆</span> Backstage Legends</a>
+</nav>
 
-  <div class="visual">
-    <img src="https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=1200&q=80" alt="Concert live">
-    <div class="quote" data-i18n="login.quote">« On ne devine plus ce que veulent les fans — on leur demande. »</div>
-  </div>
+<div class="wrap">
+  <div class="eyebrow">Connexion</div>
+  <h1>Bienvenue</h1>
+  <p class="sub">Choisissez votre type de connexion pour continuer.</p>
 
-  <div class="form-side">
-    <div class="wrap">
-      <div class="eyebrow" id="eyebrow" data-i18n="login.eyebrow">Espace fan</div>
-      <h1 id="title" data-i18n="login.title">Ravi de vous revoir</h1>
-      <p class="sub" id="subtitle" data-i18n="login.subtitle">Connectez-vous pour continuer la conversation.</p>
-
-      <div class="toggle">
-        <button type="button" id="tabLogin" class="active" data-i18n="login.tab.login">Se connecter</button>
-        <button type="button" id="tabRegister" data-i18n="login.tab.register">Créer un compte</button>
-      </div>
-
-      <form id="form">
-        <div class="field" id="fieldUsername">
-          <label data-i18n="login.label.username">Nom d'utilisateur</label>
-          <input type="text" id="usernameInput" placeholder="ex. alya.fan" autocomplete="username">
-        </div>
-        <div class="field show" id="fieldEmail">
-          <label data-i18n="login.label.email">Adresse e-mail</label>
-          <input type="email" id="emailInput" placeholder="vous@exemple.com" required autocomplete="email">
-        </div>
-        <div class="field show" id="fieldPassword">
-          <label data-i18n="login.label.password">Mot de passe</label>
-          <div class="password-wrap">
-            <input type="password" id="passwordInput" placeholder="••••••••" required minlength="8" autocomplete="current-password">
-            <button type="button" class="toggle-password" id="togglePassword" aria-label="Afficher le mot de passe" title="Afficher le mot de passe">
-              <svg id="iconEyeOpen" style="display:none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              <svg id="iconEyeClosed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="submit" id="submitBtn" data-i18n="login.submit">Se connecter</button>
+  <!-- FAN -->
+  <button type="button" class="mode-btn" id="btnFan">
+    <span>Se connecter en tant que fan</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="panel" id="panelFan">
+    <div class="panel-inner">
+      <form id="formFan">
+        <label for="fanEmail">Adresse e-mail</label>
+        <input type="email" id="fanEmail" placeholder="vous@exemple.com" required autocomplete="email">
+        <button type="submit" class="submit" id="submitFan">Continuer</button>
       </form>
-
-      <div class="msg" id="msg"></div>
-
-      <p class="hint" id="hint">Pas encore de compte ? <b id="hintLink">Créer un compte</b></p>
     </div>
   </div>
 
+  <!-- MANAGER -->
+  <button type="button" class="mode-btn" id="btnManager">
+    <span>Se connecter en tant que manager</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="panel" id="panelManager">
+    <div class="panel-inner">
+      <form id="formManager">
+        <label for="mgrEmail">Adresse e-mail</label>
+        <input type="email" id="mgrEmail" placeholder="manager@exemple.com" required autocomplete="email">
+        <label for="mgrPassword">Mot de passe</label>
+        <div class="password-wrap">
+          <input type="password" id="mgrPassword" placeholder="••••••••" required minlength="8" autocomplete="current-password">
+          <button type="button" class="toggle-password" id="togglePassword" aria-label="Afficher">👁</button>
+        </div>
+        <button type="submit" class="submit" id="submitManager">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <p class="hint"><a href="index.html">← Retour à l’accueil</a></p>
 </div>
 
 <script src="api.js"></script>
-<script src="langues.js"></script>
 <script>
+(function () {
   const params = new URLSearchParams(location.search);
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  const fieldUsername = document.getElementById('fieldUsername');
-  const title = document.getElementById('title');
-  const subtitle = document.getElementById('subtitle');
-  const eyebrow = document.getElementById('eyebrow');
-  const submitBtn = document.getElementById('submitBtn');
-  const hint = document.getElementById('hint');
+  const btnFan = document.getElementById('btnFan');
+  const btnManager = document.getElementById('btnManager');
+  const panelFan = document.getElementById('panelFan');
+  const panelManager = document.getElementById('panelManager');
   const msg = document.getElementById('msg');
-  const form = document.getElementById('form');
-
-  // --- Afficher / masquer le mot de passe ---
-  const passwordInput = document.getElementById('passwordInput');
-  const togglePassword = document.getElementById('togglePassword');
-  const iconEyeOpen = document.getElementById('iconEyeOpen');
-  const iconEyeClosed = document.getElementById('iconEyeClosed');
-
-  togglePassword.addEventListener('click', () => {
-    const isHidden = passwordInput.type === 'password';
-    passwordInput.type = isHidden ? 'text' : 'password';
-    iconEyeOpen.style.display = isHidden ? 'block' : 'none';
-    iconEyeClosed.style.display = isHidden ? 'none' : 'block';
-    togglePassword.setAttribute('aria-label', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-    togglePassword.setAttribute('title', isHidden ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-  });
 
   function showMsg(text, type) {
     msg.textContent = text;
-    msg.className = 'msg ' + (type || 'info');
-    msg.style.display = 'block';
+    msg.className = 'msg show ' + (type || 'info');
   }
 
-  function setMode(mode) {
-    if (mode === 'register') {
-      tabRegister.classList.add('active');
-      tabLogin.classList.remove('active');
-      fieldUsername.classList.add('show');
-      title.textContent = t('login.title.register') || 'Rejoignez le studio';
-      subtitle.textContent = t('login.subtitle.register') || 'Créez votre compte pour discuter directement avec le management.';
-      eyebrow.textContent = t('login.eyebrow.register') || 'Nouveau compte';
-      submitBtn.textContent = t('login.submit.register') || 'Créer mon compte';
-      hint.innerHTML = (t('login.hint.register') || 'Déjà un compte ?') + ' <b id="hintLink">' + (t('login.tab.login') || 'Se connecter') + '</b>';
-      passwordInput.setAttribute('autocomplete', 'new-password');
-    } else {
-      tabLogin.classList.add('active');
-      tabRegister.classList.remove('active');
-      fieldUsername.classList.remove('show');
-      title.textContent = t('login.title') || 'Ravi de vous revoir';
-      subtitle.textContent = t('login.subtitle') || 'Connectez-vous pour continuer la conversation.';
-      eyebrow.textContent = t('login.eyebrow') || 'Espace fan';
-      submitBtn.textContent = t('login.submit') || 'Se connecter';
-      hint.innerHTML = (t('login.hint.login') || 'Pas encore de compte ?') + ' <b id="hintLink">' + (t('login.tab.register') || 'Créer un compte') + '</b>';
-      passwordInput.setAttribute('autocomplete', 'current-password');
-    }
-    document.getElementById('hintLink').addEventListener('click', () => {
-      setMode(mode === 'register' ? 'login' : 'register');
-    });
-    msg.style.display = 'none';
+  function openPanel(which) {
+    const isFan = which === 'fan';
+    panelFan.classList.toggle('open', isFan);
+    panelManager.classList.toggle('open', !isFan);
+    btnFan.classList.toggle('active', isFan);
+    btnManager.classList.toggle('active', !isFan);
+    msg.classList.remove('show');
   }
 
-  tabLogin.addEventListener('click', () => setMode('login'));
-  tabRegister.addEventListener('click', () => setMode('register'));
-  setMode(params.get('mode') === 'register' ? 'register' : 'login');
+  btnFan.addEventListener('click', function () {
+    if (panelFan.classList.contains('open')) {
+      panelFan.classList.remove('open');
+      btnFan.classList.remove('active');
+    } else openPanel('fan');
+  });
 
-  form.addEventListener('submit', async (e) => {
+  btnManager.addEventListener('click', function () {
+    if (panelManager.classList.contains('open')) {
+      panelManager.classList.remove('open');
+      btnManager.classList.remove('active');
+    } else openPanel('manager');
+  });
+
+  document.getElementById('togglePassword').addEventListener('click', function () {
+    const input = document.getElementById('mgrPassword');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+
+  function authCall(path, opts) {
+    if (typeof apiAuth === 'function') return apiAuth(path, opts);
+    if (typeof api === 'function') return api('/api/auth' + path, opts);
+    return Promise.reject(new Error('api.js manquant'));
+  }
+
+  // --- FAN : email seul → enregistré / reconnecté en production ---
+  document.getElementById('formFan').addEventListener('submit', async function (e) {
     e.preventDefault();
-
-    const email = document.getElementById('emailInput').value.trim().toLowerCase();
-    const password = document.getElementById('passwordInput').value;
-    const username = document.getElementById('usernameInput').value.trim();
-    const isRegister = tabRegister.classList.contains('active');
-
-    if (isRegister && !username) {
-      showMsg(t('login.error.username') || "Choisissez un nom d'utilisateur.", 'error');
-      return;
-    }
-    if (password.length < 8) {
-      showMsg(t('login.error.password') || 'Le mot de passe doit faire au moins 8 caractères.', 'error');
+    const email = document.getElementById('fanEmail').value.trim().toLowerCase();
+    if (!email || email.indexOf('@') < 1) {
+      showMsg('Indiquez une adresse e-mail valide.', 'error');
       return;
     }
 
-    if (typeof api !== 'function') {
-      showMsg("api.js manquant. Vérifie que le fichier est bien dans frontend/.", 'error');
-      return;
-    }
-
-    submitBtn.disabled = true;
-    const oldLabel = submitBtn.textContent;
-    submitBtn.textContent = isRegister ? (t('login.loading.register') || 'Création…') : (t('login.loading.login') || 'Connexion…');
+    const btn = document.getElementById('submitFan');
+    btn.disabled = true;
+    btn.textContent = 'Connexion…';
 
     try {
-      let data;
-      if (isRegister) {
-        data = await apiAuth('/register', {
-          method: 'POST',
-          body: JSON.stringify({ email: email, password: password, username: username })
-        });
-      } else {
-        data = await apiAuth('/login', {
-          method: 'POST',
-          body: JSON.stringify({ email: email, password: password })
-        });
-      }
+      const data = await authCall('/fan-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: email })
+      });
 
       localStorage.setItem('backstage_token', data.access_token);
 
-      const me = await apiAuth('/me');
+      const me = await authCall('/me');
+      localStorage.setItem('backstage_username', me.username || email.split('@')[0]);
+      localStorage.setItem('backstage_email', me.email || email);
+      localStorage.setItem('backstage_role', me.role || 'fan');
+
+      showMsg('Bienvenue ! Redirection…', 'info');
+      const next = params.get('next');
+      setTimeout(function () {
+        window.location.href = next ? decodeURIComponent(next) : 'index.html';
+      }, 400);
+    } catch (err) {
+      showMsg(err.message || 'Impossible de se connecter avec cet email.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Continuer';
+    }
+  });
+
+  // --- MANAGER : email + mot de passe ---
+  document.getElementById('formManager').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const email = document.getElementById('mgrEmail').value.trim().toLowerCase();
+    const password = document.getElementById('mgrPassword').value;
+
+    const btn = document.getElementById('submitManager');
+    btn.disabled = true;
+    btn.textContent = 'Connexion…';
+
+    try {
+      const data = await authCall('/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: email, password: password })
+      });
+
+      localStorage.setItem('backstage_token', data.access_token);
+
+      const me = await authCall('/me');
+
+      if (me.role !== 'manager' && me.role !== 'admin') {
+        localStorage.removeItem('backstage_token');
+        throw new Error('Ce compte n’est pas un compte manager.');
+      }
+
       localStorage.setItem('backstage_username', me.username);
       localStorage.setItem('backstage_email', me.email);
       localStorage.setItem('backstage_role', me.role);
 
-      showMsg(
-        isRegister ? (t('login.success.register') || 'Compte créé ! Redirection…') : (t('login.success.login') || 'Connexion réussie ! Redirection…'),
-        'info'
-      );
-
-      const next = params.get('next');
+      showMsg('Connexion réussie ! Redirection…', 'info');
       setTimeout(function () {
-        if (next) {
-          window.location.href = decodeURIComponent(next);
-        } else if (me.role === 'admin') {
-          window.location.href = 'admin-dashboard.html';
-        } else if (me.role === 'manager') {
-          window.location.href = 'manager-dashboard.html';
-        } else {
-          window.location.href = 'index.html';
-        }
-      }, 500);
+        window.location.href = me.role === 'admin' ? 'admin-dashboard.html' : 'manager-dashboard.html';
+      }, 400);
     } catch (err) {
-      showMsg(err.message || (t('login.error.generic') || 'Impossible de se connecter. Vérifie que le backend tourne.'), 'error');
-      submitBtn.disabled = false;
-      submitBtn.textContent = oldLabel;
+      showMsg(err.message || 'Email ou mot de passe incorrect.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Se connecter';
     }
   });
+})();
 </script>
-
 </body>
 </html>

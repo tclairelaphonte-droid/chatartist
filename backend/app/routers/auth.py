@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
+import os
 import secrets
 import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -26,6 +29,74 @@ ALLOWED_AVATAR_TYPES = {
     "image/webp": ".webp",
 }
 MAX_AVATAR_BYTES = 3 * 1024 * 1024  # 3 Mo
+
+
+class FanEmailIn(BaseModel):
+    email: EmailStr
+
+
+def _fan_password_for_email(email: str) -> str:
+    """
+    Mot de passe technique stable pour connexion fan par email seul.
+    Définis BACKSTAGE_FAN_SECRET dans Vercel (recommandé).
+    """
+    secret = os.getenv("BACKSTAGE_FAN_SECRET", "backstage-fan-secret-change-me")
+    raw = f"{secret}:{email.strip().lower()}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+
+@router.post("/fan-email", response_model=TokenOut)
+def fan_email_login(payload: FanEmailIn, db: Session = Depends(get_db)):
+    """
+    Connexion / inscription fan par email uniquement.
+    - 1re fois : crée le compte fan en base
+    - fois suivantes : reconnecte le même compte
+    """
+    email = str(payload.email).strip().lower()
+    password = _fan_password_for_email(email)
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        if user.role != UserRole.fan:
+            raise HTTPException(
+                status_code=403,
+                detail="Cet email appartient à un compte manager ou admin.",
+            )
+        if getattr(user, "is_blocked", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Compte suspendu. Contactez le support Backstage.",
+            )
+        # Compte fan déjà créé via /fan-email
+        if not verify_password(password, user.password_hash):
+            raise HTTPException(
+                status_code=400,
+                detail="Cet email existe déjà avec un autre mode de connexion.",
+            )
+    else:
+        base = email.split("@")[0][:40] or "fan"
+        # nettoie un peu le username
+        username = "".join(ch for ch in base if ch.isalnum() or ch in "._-") or "fan"
+        candidate = username
+        i = 1
+        while db.query(User).filter(User.username == candidate).first():
+            candidate = f"{username}{i}"
+            i += 1
+
+        user = User(
+            username=candidate,
+            email=email,
+            password_hash=hash_password(password),
+            role=UserRole.fan,
+            is_blocked=False,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    token = create_access_token(subject=user.id, role=user.role.value)
+    return TokenOut(access_token=token)
 
 
 @router.post("/register", response_model=TokenOut, status_code=status.HTTP_201_CREATED)
@@ -80,7 +151,6 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="E-mail ou mot de passe incorrect.")
 
-    # Compte suspendu par l'admin plateforme
     if getattr(user, "is_blocked", False):
         raise HTTPException(
             status_code=403,
@@ -107,12 +177,6 @@ async def upload_avatar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Upload de la photo de profil.
-    - Enregistre le fichier dans /files/avatars/
-    - Met à jour User.avatar_url
-    - Retourne {"avatar_url": "..."}
-    """
     if file.content_type not in ALLOWED_AVATAR_TYPES:
         raise HTTPException(
             status_code=400,

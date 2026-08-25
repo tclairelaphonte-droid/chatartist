@@ -2,8 +2,10 @@ import os
 import re
 from datetime import datetime, timezone
 
+
 import cloudinary
 import cloudinary.uploader
+
 
 from fastapi import (
     APIRouter,
@@ -16,6 +18,7 @@ from fastapi import (
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+
 from app.database import get_db
 from app.deps import require_manager
 from app.models import (
@@ -25,6 +28,8 @@ from app.models import (
     SenderType,
     User,
     UserRole,
+    VoteProof,
+    VoteStatus,
 )
 from app.schemas import (
     ArtistOut,
@@ -33,21 +38,28 @@ from app.schemas import (
     ConversationOut,
     MessageOut,
     SendMessageIn,
+    VoteProofOut,
+    VoteProofStatusIn,
 )
 from app.ws_manager import manager as ws_manager
 
 
+
 router = APIRouter(prefix="/manager", tags=["manager"])
+
 
 
 # ---------------------------------------------------------------------------
 # CLOUDINARY (upload NON SIGNE, comme pour l'avatar / les fans)
 # ---------------------------------------------------------------------------
 
+
 CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
 UPLOAD_PRESET = os.getenv("CLOUDINARY_UPLOAD_PRESET", "chatartist_uploads")
 
+
 cloudinary.config(cloud_name=CLOUD_NAME, secure=True)
+
 
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
@@ -56,7 +68,9 @@ ALLOWED_IMAGE_TYPES = {
     "image/gif": ".gif",
 }
 
+
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
 
 
 def _save_chat_image(file: UploadFile) -> str:
@@ -64,6 +78,7 @@ def _save_chat_image(file: UploadFile) -> str:
     Envoie une image de conversation vers Cloudinary
     et retourne son URL HTTPS publique.
     """
+
 
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
@@ -74,7 +89,9 @@ def _save_chat_image(file: UploadFile) -> str:
             ),
         )
 
+
     data = file.file.read()
+
 
     if not data:
         raise HTTPException(
@@ -82,11 +99,13 @@ def _save_chat_image(file: UploadFile) -> str:
             detail="Le fichier image est vide.",
         )
 
+
     if len(data) > MAX_IMAGE_BYTES:
         raise HTTPException(
             status_code=400,
             detail="Image trop volumineuse (max 5 Mo).",
         )
+
 
     try:
         result = cloudinary.uploader.unsigned_upload(
@@ -96,15 +115,20 @@ def _save_chat_image(file: UploadFile) -> str:
             resource_type="image",
         )
 
+
         secure_url = result.get("secure_url")
+
 
         if not secure_url:
             raise RuntimeError("Cloudinary n'a pas retourné de secure_url.")
 
+
         return secure_url
+
 
     except Exception as e:
         print("Cloudinary upload error:", repr(e))
+
 
         raise HTTPException(
             status_code=500,
@@ -112,9 +136,11 @@ def _save_chat_image(file: UploadFile) -> str:
         )
 
 
+
 # ---------------------------------------------------------------------------
 # UTILITAIRES MANAGER
 # ---------------------------------------------------------------------------
+
 
 def _acting_manager_id(
     request: Request,
@@ -125,15 +151,19 @@ def _acting_manager_id(
     Manager :
         -> utilise son propre ID.
 
+
     Admin + X-Act-As-Manager :
         -> agit au nom du manager indiqué.
+
 
     Admin sans header :
         -> utilise son propre ID.
     """
 
+
     if current.role == UserRole.admin:
         act = request.headers.get("X-Act-As-Manager")
+
 
         if act:
             manager = (
@@ -145,15 +175,19 @@ def _acting_manager_id(
                 .first()
             )
 
+
             if not manager:
                 raise HTTPException(
                     status_code=404,
                     detail="Manager introuvable.",
                 )
 
+
             return manager.id
 
+
     return current.id
+
 
 
 def _get_owned_artist(
@@ -161,6 +195,7 @@ def _get_owned_artist(
     artist_id: str,
     manager_id: str,
 ) -> Artist:
+
 
     artist = (
         db.query(Artist)
@@ -171,13 +206,16 @@ def _get_owned_artist(
         .first()
     )
 
+
     if not artist:
         raise HTTPException(
             status_code=404,
             detail="Artiste introuvable.",
         )
 
+
     return artist
+
 
 
 def _get_owned_conversation(
@@ -185,6 +223,7 @@ def _get_owned_conversation(
     conversation_id: str,
     manager_id: str,
 ) -> Conversation:
+
 
     conversation = (
         db.query(Conversation)
@@ -199,11 +238,13 @@ def _get_owned_conversation(
         .first()
     )
 
+
     if not conversation or not conversation.artist:
         raise HTTPException(
             status_code=404,
             detail="Conversation introuvable.",
         )
+
 
     if conversation.artist.manager_id != manager_id:
         raise HTTPException(
@@ -211,11 +252,14 @@ def _get_owned_conversation(
             detail="Conversation introuvable.",
         )
 
+
     return conversation
+
 
 
 def _slugify(name: str) -> str:
     s = name.lower().strip()
+
 
     s = re.sub(
         r"[^a-z0-9\s-]",
@@ -223,15 +267,19 @@ def _slugify(name: str) -> str:
         s,
     )
 
+
     s = re.sub(
         r"[\s_-]+",
         "-",
         s,
     )
 
+
     s = s.strip("-")
 
+
     return s[:60] or "artiste"
+
 
 
 def _unique_slug(
@@ -240,26 +288,33 @@ def _unique_slug(
     exclude_id: str | None = None,
 ) -> str:
 
+
     slug = base
     n = 2
 
+
     while True:
+
 
         q = (
             db.query(Artist)
             .filter(Artist.slug == slug)
         )
 
+
         if exclude_id:
             q = q.filter(
                 Artist.id != exclude_id
             )
 
+
         if not q.first():
             return slug
 
+
         slug = f"{base}-{n}"
         n += 1
+
 
 
 def _sorted_messages(messages):
@@ -274,18 +329,23 @@ def _sorted_messages(messages):
     )
 
 
+
 # ---------------------------------------------------------------------------
 # SERIALISATION CONVERSATION
 # ---------------------------------------------------------------------------
+
 
 def _conversation_out(
     c: Conversation,
     artist: Artist,
 ) -> ConversationOut:
 
+
     msgs = _sorted_messages(c.messages)
 
+
     last = msgs[-1] if msgs else None
+
 
     unread = sum(
         1
@@ -296,13 +356,17 @@ def _conversation_out(
         )
     )
 
+
     fan = c.fan
+
 
     fan_username = "fan"
     fan_avatar = None
     fan_id = c.fan_id
 
+
     if fan:
+
 
         fan_username = (
             fan.username
@@ -313,13 +377,16 @@ def _conversation_out(
             )
         )
 
+
         fan_avatar = getattr(
             fan,
             "avatar_url",
             None,
         )
 
+
         fan_id = fan.id
+
 
     return ConversationOut(
         id=c.id,
@@ -342,10 +409,12 @@ def _conversation_out(
     )
 
 
+
 def _artist_out_with_unread(
     db: Session,
     a: Artist,
 ) -> ArtistOut:
+
 
     unread = (
         db.query(func.count(Message.id))
@@ -364,20 +433,25 @@ def _artist_out_with_unread(
         .scalar()
     ) or 0
 
+
     data = (
         ArtistOut
         .model_validate(a)
         .model_dump()
     )
 
+
     data["unread_count"] = unread
 
+
     return ArtistOut(**data)
+
 
 
 # ===========================================================================
 # ARTISTES
 # ===========================================================================
+
 
 @router.get(
     "/artists",
@@ -389,11 +463,13 @@ def list_my_artists(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     artists = (
         db.query(Artist)
@@ -406,10 +482,12 @@ def list_my_artists(
         .all()
     )
 
+
     return [
         _artist_out_with_unread(db, a)
         for a in artists
     ]
+
 
 
 @router.get(
@@ -423,11 +501,13 @@ def get_my_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     artist = _get_owned_artist(
         db,
@@ -435,10 +515,12 @@ def get_my_artist(
         mid,
     )
 
+
     return _artist_out_with_unread(
         db,
         artist,
     )
+
 
 
 @router.post(
@@ -453,21 +535,25 @@ def create_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
 
+
     base_slug = (
         payload.slug
         or _slugify(payload.name)
     )
 
+
     slug = _unique_slug(
         db,
         base_slug,
     )
+
 
     artist = Artist(
         manager_id=mid,
@@ -485,14 +571,17 @@ def create_artist(
         news=payload.news,
     )
 
+
     db.add(artist)
     db.commit()
     db.refresh(artist)
+
 
     return _artist_out_with_unread(
         db,
         artist,
     )
+
 
 
 @router.patch(
@@ -507,11 +596,13 @@ def update_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     artist = _get_owned_artist(
         db,
@@ -519,9 +610,11 @@ def update_artist(
         mid,
     )
 
+
     data = payload.model_dump(
         exclude_unset=True
     )
+
 
     if "slug" in data and data["slug"]:
         data["slug"] = _unique_slug(
@@ -530,6 +623,7 @@ def update_artist(
             exclude_id=artist.id,
         )
 
+
     for key, value in data.items():
         setattr(
             artist,
@@ -537,13 +631,16 @@ def update_artist(
             value,
         )
 
+
     db.commit()
     db.refresh(artist)
+
 
     return _artist_out_with_unread(
         db,
         artist,
     )
+
 
 
 @router.delete(
@@ -557,11 +654,13 @@ def delete_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     artist = _get_owned_artist(
         db,
@@ -569,15 +668,19 @@ def delete_artist(
         mid,
     )
 
+
     db.delete(artist)
     db.commit()
 
+
     return None
+
 
 
 # ===========================================================================
 # CONVERSATIONS
 # ===========================================================================
+
 
 @router.get(
     "/artists/{artist_id}/conversations",
@@ -590,17 +693,20 @@ def conversations_for_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
 
+
     artist = _get_owned_artist(
         db,
         artist_id,
         mid,
     )
+
 
     conversations = (
         db.query(Conversation)
@@ -622,10 +728,12 @@ def conversations_for_artist(
         .all()
     )
 
+
     return [
         _conversation_out(c, artist)
         for c in conversations
     ]
+
 
 
 @router.get(
@@ -639,17 +747,20 @@ def trash_conversations_for_artist(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
 
+
     artist = _get_owned_artist(
         db,
         artist_id,
         mid,
     )
+
 
     conversations = (
         db.query(Conversation)
@@ -671,15 +782,18 @@ def trash_conversations_for_artist(
         .all()
     )
 
+
     return [
         _conversation_out(c, artist)
         for c in conversations
     ]
 
 
+
 # ===========================================================================
 # MESSAGES
 # ===========================================================================
+
 
 @router.get(
     "/conversations/{conversation_id}/messages",
@@ -692,11 +806,13 @@ def get_conversation_messages(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     conversation = _get_owned_conversation(
         db,
@@ -704,13 +820,17 @@ def get_conversation_messages(
         mid,
     )
 
+
     msgs = _sorted_messages(
         conversation.messages
     )
 
+
     changed = False
 
+
     for message in msgs:
+
 
         if (
             message.sender_type
@@ -720,13 +840,16 @@ def get_conversation_messages(
             message.read_by_manager = True
             changed = True
 
+
     if changed:
         db.commit()
+
 
     return [
         MessageOut.model_validate(m)
         for m in msgs
     ]
+
 
 
 @router.post(
@@ -742,17 +865,20 @@ async def reply_to_conversation(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
 
+
     conversation = _get_owned_conversation(
         db,
         conversation_id,
         mid,
     )
+
 
     if (
         not payload.text
@@ -766,6 +892,7 @@ async def reply_to_conversation(
             ),
         )
 
+
     message = Message(
         conversation_id=conversation.id,
         sender_type=SenderType.manager,
@@ -774,30 +901,38 @@ async def reply_to_conversation(
         read_by_manager=True,
     )
 
+
     db.add(message)
+
 
     conversation.updated_at = (
         datetime.now(timezone.utc)
     )
 
+
     db.commit()
     db.refresh(message)
+
 
     out = MessageOut.model_validate(
         message
     )
+
 
     await ws_manager.broadcast(
         conversation.id,
         out.model_dump(mode="json"),
     )
 
+
     return out
+
 
 
 # ===========================================================================
 # UPLOAD IMAGE MANAGER → CLOUDINARY
 # ===========================================================================
+
 
 @router.post(
     "/conversations/{conversation_id}/image"
@@ -810,11 +945,13 @@ async def upload_manager_chat_image(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     _get_owned_conversation(
         db,
@@ -822,16 +959,20 @@ async def upload_manager_chat_image(
         mid,
     )
 
+
     image_url = _save_chat_image(file)
+
 
     return {
         "image_url": image_url
     }
 
 
+
 # ===========================================================================
 # CORBEILLE
 # ===========================================================================
+
 
 @router.post(
     "/conversations/{conversation_id}/trash"
@@ -843,11 +984,13 @@ def trash_conversation(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     conversation = _get_owned_conversation(
         db,
@@ -855,15 +998,19 @@ def trash_conversation(
         mid,
     )
 
+
     conversation.trashed_at = (
         datetime.now(timezone.utc)
     )
 
+
     db.commit()
+
 
     return {
         "ok": True
     }
+
 
 
 @router.post(
@@ -876,11 +1023,13 @@ def restore_conversation(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     conversation = _get_owned_conversation(
         db,
@@ -888,13 +1037,17 @@ def restore_conversation(
         mid,
     )
 
+
     conversation.trashed_at = None
 
+
     db.commit()
+
 
     return {
         "ok": True
     }
+
 
 
 @router.delete(
@@ -908,11 +1061,13 @@ def delete_conversation(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     conversation = _get_owned_conversation(
         db,
@@ -920,15 +1075,19 @@ def delete_conversation(
         mid,
     )
 
+
     db.delete(conversation)
     db.commit()
 
+
     return None
+
 
 
 # ===========================================================================
 # STATISTIQUES
 # ===========================================================================
+
 
 @router.get(
     "/stats/summary"
@@ -939,11 +1098,13 @@ def unread_summary(
     current_manager: User = Depends(require_manager),
 ):
 
+
     mid = _acting_manager_id(
         request,
         current_manager,
         db,
     )
+
 
     total_unread = (
         db.query(func.count(Message.id))
@@ -967,6 +1128,113 @@ def unread_summary(
         .scalar()
     )
 
+
     return {
         "unread_messages": total_unread or 0
     }
+
+
+
+# ===========================================================================
+# PREUVES DE VOTE (Backstage Legends)
+# ===========================================================================
+
+
+def _vote_proof_out(vp: VoteProof) -> VoteProofOut:
+    artist_name = vp.artist.name if vp.artist else None
+    return VoteProofOut(
+        id=vp.id,
+        artist_id=vp.artist_id,
+        artist_name=artist_name,
+        fan_id=vp.fan_id,
+        fan_email=vp.fan_email,
+        fan_username=vp.fan_username,
+        votes=vp.votes or 0,
+        price_eur=vp.price_eur or 0,
+        tier=vp.tier or "small",
+        payment_method=vp.payment_method,
+        proof_image_url=vp.proof_image_url,
+        status=vp.status.value if hasattr(vp.status, "value") else str(vp.status),
+        note=vp.note,
+        created_at=vp.created_at,
+    )
+
+
+
+
+@router.get("/vote-proofs", response_model=list[VoteProofOut])
+def list_vote_proofs(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_manager: User = Depends(require_manager),
+):
+    """Toutes les preuves de vote pour les artistes du manager."""
+    mid = _acting_manager_id(request, current_manager, db)
+
+    rows = (
+        db.query(VoteProof)
+        .options(joinedload(VoteProof.artist))
+        .join(Artist, VoteProof.artist_id == Artist.id)
+        .filter(Artist.manager_id == mid)
+        .order_by(VoteProof.created_at.desc())
+        .all()
+    )
+    return [_vote_proof_out(r) for r in rows]
+
+
+
+
+@router.get(
+    "/artists/{artist_id}/vote-proofs",
+    response_model=list[VoteProofOut],
+)
+def list_artist_vote_proofs(
+    artist_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_manager: User = Depends(require_manager),
+):
+    mid = _acting_manager_id(request, current_manager, db)
+    _get_owned_artist(db, artist_id, mid)
+
+    rows = (
+        db.query(VoteProof)
+        .options(joinedload(VoteProof.artist))
+        .filter(VoteProof.artist_id == artist_id)
+        .order_by(VoteProof.created_at.desc())
+        .all()
+    )
+    return [_vote_proof_out(r) for r in rows]
+
+
+
+
+@router.patch(
+    "/vote-proofs/{proof_id}",
+    response_model=VoteProofOut,
+)
+def update_vote_proof_status(
+    proof_id: str,
+    payload: VoteProofStatusIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_manager: User = Depends(require_manager),
+):
+    mid = _acting_manager_id(request, current_manager, db)
+
+    vp = (
+        db.query(VoteProof)
+        .options(joinedload(VoteProof.artist))
+        .filter(VoteProof.id == proof_id)
+        .first()
+    )
+    if not vp or not vp.artist or vp.artist.manager_id != mid:
+        raise HTTPException(status_code=404, detail="Preuve introuvable.")
+
+    vp.status = VoteStatus(payload.status)
+    if payload.note is not None:
+        vp.note = payload.note
+
+    db.commit()
+    db.refresh(vp)
+    return _vote_proof_out(vp)

@@ -34,6 +34,9 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:12px;paddi
 main{flex:1;padding:20px 16px 40px;max-width:900px;width:100%;margin:0 auto;}
 h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600;}
 .lead{color:var(--muted);font-size:14px;margin:0 0 24px;}
+.section-title{font-family:var(--font-display);font-size:22px;margin:36px 0 8px;font-weight:600;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.toolbar .count{font-family:var(--font-mono);font-size:12px;color:var(--muted);}
 .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
 .card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
 .card h2{margin:0;font-size:16px;font-weight:600;}
@@ -47,10 +50,20 @@ h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600
 .artists li{font-size:13px;color:var(--muted);margin:4px 0;}
 .empty,.err{text-align:center;padding:40px 16px;color:var(--muted);font-family:var(--font-mono);font-size:13px;}
 .err{color:var(--red);}
+.table-wrap{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top;}
+th{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface);}
+td.email{word-break:break-all;font-weight:500;}
+td.muted{color:var(--muted);font-size:12px;}
+tr:last-child td{border-bottom:none;}
 @media(min-width:640px){
   nav{padding:16px 28px;}
   main{padding:28px 24px 48px;}
   h1{font-size:30px;}
+}
+@media(max-width:520px){
+  th:nth-child(3),td:nth-child(3){display:none;}
 }
 </style>
 </head>
@@ -65,8 +78,17 @@ h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600
 </nav>
 <main>
   <h1>Managers clients</h1>
-  <p class="lead">Bloquez un compte en cas d’infraction. Débloquez après régularisation. Fonctionne aussi sur téléphone.</p>
+  <p class="lead">Bloquez un compte en cas d’infraction. Débloquez après régularisation.</p>
   <div id="list"><div class="empty">Chargement…</div></div>
+
+  <h2 class="section-title">Emails fans inscrits</h2>
+  <p class="lead">Tous les fans qui se connectent avec leur email apparaissent ici. Copiez la liste pour envoyer des invitations.</p>
+  <div class="toolbar">
+    <button type="button" class="btn primary" id="btnCopyEmails">Copier tous les emails</button>
+    <button type="button" class="btn" id="btnRefreshFans">Actualiser</button>
+    <span class="count" id="fansCount">—</span>
+  </div>
+  <div id="fansBox"><div class="empty">Chargement…</div></div>
 </main>
 <script src="api.js"></script>
 <script>
@@ -92,6 +114,86 @@ h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600
   };
 
   var listEl = document.getElementById('list');
+  var fansBox = document.getElementById('fansBox');
+  var fansCount = document.getElementById('fansCount');
+  var fanEmails = [];
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try {
+      return new Date(iso).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+    } catch (e) {
+      return '—';
+    }
+  }
+
+  async function loadFans() {
+    fansBox.innerHTML = '<div class="empty">Chargement…</div>';
+    fansCount.textContent = '—';
+    fanEmails = [];
+    try {
+      var fans = await api('/admin/fans');
+      if (!Array.isArray(fans)) fans = [];
+      fanEmails = fans.map(function (f) { return f.email; }).filter(Boolean);
+      fansCount.textContent = fans.length + ' fan(s)';
+
+      if (!fans.length) {
+        fansBox.innerHTML = '<div class="empty">Aucun fan inscrit pour le moment.</div>';
+        return;
+      }
+
+      var rows = fans.map(function (f) {
+        return (
+          '<tr>' +
+            '<td class="email">' + (f.email || '') + '</td>' +
+            '<td class="muted">' + (f.username || '—') + '</td>' +
+            '<td class="muted">' + formatDate(f.created_at) + '</td>' +
+            '<td>' +
+              '<span class="badge ' + (f.is_blocked ? 'off' : 'on') + '">' +
+                (f.is_blocked ? 'Bloqué' : 'Actif') +
+              '</span>' +
+            '</td>' +
+          '</tr>'
+        );
+      }).join('');
+
+      fansBox.innerHTML =
+        '<div class="table-wrap"><table>' +
+          '<thead><tr>' +
+            '<th>Email</th><th>Pseudo</th><th>Inscrit le</th><th>Statut</th>' +
+          '</tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table></div>';
+    } catch (err) {
+      fansBox.innerHTML =
+        '<div class="err">' + (err.message || err) +
+        '<br><span style="color:var(--muted);font-size:12px;">Vérifie que GET /admin/fans est déployé.</span></div>';
+      fansCount.textContent = 'erreur';
+    }
+  }
+
+  document.getElementById('btnCopyEmails').onclick = function () {
+    if (!fanEmails.length) {
+      alert('Aucun email à copier.');
+      return;
+    }
+    var text = fanEmails.join(', ');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        alert(fanEmails.length + ' email(s) copiés dans le presse-papiers.');
+      }).catch(function () {
+        prompt('Copiez les emails :', text);
+      });
+    } else {
+      prompt('Copiez les emails :', text);
+    }
+  };
+
+  document.getElementById('btnRefreshFans').onclick = function () {
+    loadFans();
+  };
 
   async function load() {
     listEl.innerHTML = '<div class="empty">Chargement…</div>';
@@ -182,6 +284,7 @@ h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600
   }
 
   load();
+  loadFans();
 })();
 </script>
 </body>

@@ -202,3 +202,33 @@ class ConversationDetailOut(BaseModel):
 class SendMessageIn(BaseModel):
     text: Optional[str] = Field(default=None, max_length=4000)
     image_url: Optional[str] = None
+    # ---------- Vote Proofs ----------
+
+class VoteProofOut(BaseModel):
+    id: str
+    artist_id: str
+    artist_name: Optional[str] = None
+
+    fan_id: Optional[str] = None
+    fan_email: Optional[str] = None
+    fan_username: Optional[str] = None
+
+    votes: int
+    price_eur: int
+    tier: str
+    payment_method: str
+
+    proof_image_url: Optional[str] = None
+
+    status: Literal["pending", "validated", "rejected"]
+
+    note: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class VoteProofStatusIn(BaseModel):
+    status: Literal["pending", "validated", "rejected"]
+    note: Optional[str] = None
