@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voter — Backstage Legends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0b;--surface:#121214;--surface-2:#1a1a1e;
+  --border:rgba(212,175,55,.22);--gold:#d4af37;--gold-light:#f0d77b;--gold-dark:#a8861f;
+  --ink:#f5f0e6;--muted:#9a958c;
+  --font-display:'Cinzel',serif;--font-body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);min-height:100vh;position:relative;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+img{display:block;max-width:100%;}
+
+.bg-effects{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.glow{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;animation:floatGlow 18s ease-in-out infinite;}
+.glow-1{width:400px;height:400px;top:-8%;left:8%;background:radial-gradient(circle,rgba(212,175,55,.4),transparent 70%);}
+.glow-2{width:320px;height:320px;bottom:8%;right:5%;background:radial-gradient(circle,rgba(240,215,123,.25),transparent 70%);animation-delay:-7s;}
+@keyframes floatGlow{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-30px);}}
+.particle{position:absolute;border-radius:50%;background:var(--gold-light);opacity:0;box-shadow:0 0 6px var(--gold);animation:rise linear infinite;}
+@keyframes rise{0%{opacity:0;transform:translateY(100vh);}10%{opacity:.65;}100%{opacity:0;transform:translateY(-5vh);}}
+.content{position:relative;z-index:1;}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);background:rgba(10,10,11,.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:40;}
+.logo{font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--gold);}
+.logo span{color:var(--gold-light);}
+.back{font-size:13px;color:var(--muted);}
+.back:hover{color:var(--gold-light);}
+
+.hero-artist{max-width:900px;margin:0 auto;padding:40px 24px 20px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+.hero-artist .av{width:100px;height:100px;border-radius:18px;object-fit:cover;border:1px solid var(--border);background:var(--surface-2);flex-shrink:0;}
+.hero-artist .genre{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.hero-artist h1{font-family:var(--font-display);font-size:clamp(24px,4vw,34px);margin:0 0 8px;}
+.hero-artist .bio{color:var(--muted);font-size:14px;line-height:1.5;max-width:480px;}
+
+.section{max-width:1000px;margin:0 auto;padding:24px 24px 60px;}
+.section-title{font-family:var(--font-display);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:24px;}
+
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+.pack{
+  background:rgba(18,18,20,.92);border:1px solid var(--border);border-radius:18px;padding:24px 18px;text-align:center;
+  cursor:pointer;transition:all .3s;position:relative;
+}
+.pack:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 14px 36px rgba(212,175,55,.15);}
+.pack.popular{border-color:var(--gold);background:linear-gradient(180deg,rgba(212,175,55,.12),rgba(18,18,20,.95));}
+.pack.popular::before{
+  content:'POPULAIRE';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#0a0a0b;
+  font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:999px;
+}
+.pack .votes-num{font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--gold-light);}
+.pack .votes-label{font-size:12px;color:var(--muted);margin:4px 0 14px;}
+.pack .price{font-size:20px;font-weight:700;margin-bottom:4px;}
+.pack .price span{font-size:13px;color:var(--muted);font-weight:500;}
+.pack .per{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.pack .btn{
+  display:block;width:100%;padding:11px;border-radius:12px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dark));
+  color:#0a0a0b;font-weight:700;font-size:13px;
+}
+
+/* Modal paiement */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;}
+.modal{
+  background:#121214;border:1px solid var(--border);border-radius:20px;padding:28px 24px;
+  max-width:480px;width:100%;max-height:90vh;overflow-y:auto;position:relative;
+}
+.modal h2{font-family:var(--font-display);font-size:20px;margin:0 0 8px;color:var(--gold-light);}
+.modal .sub{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5;}
+.modal .close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;}
+.pay-option{
+  border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px;cursor:pointer;transition:all .2s;
+}
+.pay-option:hover{border-color:var(--gold);background:rgba(212,175,55,.06);}
+.pay-option h3{font-size:14px;margin:0 0 4px;color:var(--ink);}
+.pay-option p{font-size:12px;color:var(--muted);margin:0;line-height:1.45;}
+.store-links{display:flex;flex-direction:column;gap:10px;margin:14px 0;}
+.store-links a{
+  display:block;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--border);
+  font-weight:600;font-size:13px;color:var(--gold-light);transition:all .2s;
+}
+.store-links a:hover{border-color:var(--gold);background:rgba(212,175,55,.1);}
+.upload-box{
+  border:1px dashed var(--border);border-radius:14px;padding:20px;text-align:center;margin:14px 0;
+  background:rgba(212,175,55,.04);
+}
+.upload-box input{margin-top:10px;font-size:13px;color:var(--muted);width:100%;}
+.msg-box{display:none;padding:14px;border-radius:12px;font-size:13.5px;line-height:1.5;margin-top:14px;}
+.msg-box.show{display:block;}
+.msg-box.info{background:rgba(212,175,55,.1);border:1px solid var(--border);color:var(--gold-light);}
+.msg-box.ok{background:rgba(26,156,94,.12);border:1px solid rgba(26,156,94,.35);color:#7dcea0;}
+.btn-gold{
+  display:inline-block;width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;margin-top:12px;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#0a0a0b;font-weight:700;font-size:14px;
+}
+.btn-outline{
+  display:inline-block;width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--ink);font-weight:600;font-size:13px;cursor:pointer;margin-top:10px;text-align:center;
+}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold-light);}
+.hidden{display:none!important;}
+.success-panel{text-align:center;padding:10px 0;}
+.success-panel .icon{font-size:42px;margin-bottom:12px;}
+.success-panel h2{font-family:var(--font-display);color:var(--gold-light);margin-bottom:10px;}
+.success-panel p{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:18px;}
+
+footer{text-align:center;padding:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);}
+footer span{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div class="bg-effects" id="bgEffects">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+</div>
+
+<div class="content">
+<nav>
+  <a href="index.html" class="logo"><span>◆</span> Backstage Legends</a>
+  <a href="index.html" class="back">← Tous les artistes</a>
+</nav>
+
+<div class="hero-artist">
+  <img class="av" id="avatar" src="" alt="">
+  <div>
+    <div class="genre" id="genre">—</div>
+    <h1 id="name">Chargement…</h1>
+    <p class="bio" id="bioShort"></p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="section-title">Offrez des votes à cet artiste</div>
+  <div class="packs" id="packs">
+    <div class="pack" data-votes="30" data-price="50" data-tier="small">
+      <div class="votes-num">30</div>
+      <div class="votes-label">votes</div>
+      <div class="price">50 € <span>TTC</span></div>
+      <div class="per">~1,67 € / vote</div>
+      <button class="btn" type="button">Choisir</button>
+    </div>
+    <div class="pack" data-votes="200" data-price="100" data-tier="small">
+      <div class="votes-num">200</div>
+      <div class="votes-label">votes</div>
+      <div class="price">100 € <span>TTC</span></div>
+      <div class="per">~0,50 € / vote</div>
+      <button class="btn" type="button">Choisir</button>
+    </div>
+    <div class="pack popular" data-votes="500" data-price="600" data-tier="small">
+      <div class="votes-num">500</div>
+      <div class="votes-label">votes</div>
+      <div class="price">600 € <span>TTC</span></div>
+      <div class="per">~1,20 € / vote</div>
+      <button class="btn" type="button">Choisir</button>
+    </div>
+    <div class="pack" data-votes="1000" data-price="1500" data-tier="small">
+      <div class="votes-num">1 000</div>
+      <div class="votes-label">votes</div>
+      <div class="price">1 500 € <span>TTC</span></div>
+      <div class="per">~1,50 € / vote</div>
+      <button class="btn" type="button">Choisir</button>
+    </div>
+    <div class="pack" data-votes="2500" data-price="8000" data-tier="vip">
+      <div class="votes-num">2 500</div>
+      <div class="votes-label">votes</div>
+      <div class="price">8 000 € <span>TTC</span></div>
+      <div class="per">~3,20 € / vote · VVIP</div>
+      <button class="btn" type="button">Choisir</button>
+    </div>
+  </div>
+</section>
+
+<footer><span>◆</span> Backstage Legends — vote premium international</footer>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal">
+    <button class="close" id="closeModal" type="button">×</button>
+
+    <!-- Étape choix moyen -->
+    <div id="stepPay">
+      <h2 id="modalTitle">Paiement</h2>
+      <p class="sub" id="modalSub">Choisissez votre mode de paiement.</p>
+
+      <div id="paySmall">
+        <div class="pay-option" id="optInstant">
+          <h3>Achat instantané (carte / boutique)</h3>
+          <p>Payez via les sites officiels Amazon, Apple ou Google Play Store.</p>
+        </div>
+        <div class="pay-option" id="optPhysical">
+          <h3>Carte cadeau physique</h3>
+          <p>Achetez en supermarché, photographiez le code au dos, puis déposez la photo ici.</p>
+        </div>
+      </div>
+
+      <div id="payVip" class="hidden">
+        <div class="pay-option" data-vip="paypal">
+          <h3>PayPal</h3>
+          <p>Un comptable vous transmettra les instructions de paiement.</p>
+        </div>
+        <div class="pay-option" data-vip="postepay">
+          <h3>PostePay</h3>
+          <p>Un comptable vous transmettra les instructions de paiement.</p>
+        </div>
+        <div class="pay-option" data-vip="bank">
+          <h3>Virement bancaire</h3>
+          <p>Un comptable vous enverra le RIB sur lequel effectuer le paiement.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instantané -->
+    <div id="stepInstant" class="hidden">
+      <h2>Achat instantané</h2>
+      <p class="sub">Choisissez une boutique officielle, puis revenez déposer votre preuve de paiement.</p>
+      <div class="store-links">
+        <a href="https://www.amazon.fr" target="_blank" rel="noopener">Amazon →</a>
+        <a href="https://www.apple.com/fr/shop" target="_blank" rel="noopener">Apple Store →</a>
+        <a href="https://play.google.com/store" target="_blank" rel="noopener">Google Play Store →</a>
+      </div>
+      <div class="upload-box">
+        <p style="font-size:13px;color:var(--muted);">Déposez la capture / photo de votre paiement</p>
+        <input type="file" id="proofInstant" accept="image/*">
+      </div>
+      <button class="btn-gold" type="button" id="submitInstant">Valider mon vote</button>
+    </div>
+
+    <!-- Physique -->
+    <div id="stepPhysical" class="hidden">
+      <h2>Carte cadeau physique</h2>
+      <p class="sub">Rendez-vous dans n’importe quel supermarché ou point de vente. Une fois la carte en main, prenez une photo nette du code au dos et téléchargez-la ici.</p>
+      <div class="upload-box">
+        <p style="font-size:13px;color:var(--muted);">Photo du code (carte cadeau)</p>
+        <input type="file" id="proofPhysical" accept="image/*">
+      </div>
+      <button class="btn-gold" type="button" id="submitPhysical">Valider mon vote</button>
+    </div>
+
+    <!-- VIP message RIB -->
+    <div id="stepVipInfo" class="hidden">
+      <h2>Paiement grand montant</h2>
+      <p class="sub" id="vipMsg">Un comptable va vous transmettre le RIB / les instructions sur lequel effectuer votre paiement. Après le virement, déposez la capture d’écran ici.</p>
+      <div class="msg-box info show">Mode sélectionné : <strong id="vipMethod">—</strong></div>
+      <div class="upload-box">
+        <p style="font-size:13px;color:var(--muted);">Capture de votre paiement</p>
+        <input type="file" id="proofVip" accept="image/*">
+      </div>
+      <button class="btn-gold" type="button" id="submitVip">Valider mon vote VVIP</button>
+    </div>
+
+    <!-- Succès -->
+    <div id="stepSuccess" class="hidden">
+      <div class="success-panel">
+        <div class="icon">✦</div>
+        <h2>Félicitations</h2>
+        <p id="successText">Vous avez voté pour votre artiste. Vous serez invité(e) à la remise des trophées.</p>
+        <a class="btn-gold" id="contactBtn" href="#">Contacter l’artiste</a>
+        <a class="btn-outline" href="index.html">Retour aux artistes</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+(function () {
+  var container = document.getElementById('bgEffects');
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.width = p.style.height = (1.5 + Math.random() * 2) + 'px';
+    p.style.animationDuration = (12 + Math.random() * 16) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    container.appendChild(p);
+  }
+
+  var params = new URLSearchParams(location.search);
+  var artistId = params.get('id');
+  var artistName = 'Artiste';
+  var selected = null;
+
+  var PLACEHOLDER =
+    'data:image/svg+xml,' +
+    encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect fill="#1a1a1e" width="100%" height="100%"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9a958c" font-size="14" font-family="sans-serif">Avatar</text></svg>');
+
+  function mediaUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (url.startsWith('assets/')) return url;
+    if (typeof API_BASE !== 'undefined') return url.startsWith('/') ? API_BASE + url : API_BASE + '/' + url;
+    return url;
+  }
+
+  function showStep(id) {
+    ['stepPay','stepInstant','stepPhysical','stepVipInfo','stepSuccess'].forEach(function (s) {
+      document.getElementById(s).classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function openModal(pack) {
+    selected = pack;
+    document.getElementById('modalTitle').textContent = pack.votes + ' votes — ' + pack.price + ' €';
+    document.getElementById('modalSub').textContent = 'Pour ' + artistName + ' · choisissez votre mode de paiement.';
+    document.getElementById('paySmall').classList.toggle('hidden', pack.tier === 'vip');
+    document.getElementById('payVip').classList.toggle('hidden', pack.tier !== 'vip');
+    showStep('stepPay');
+    document.getElementById('overlay').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+  function completeVote(isVip) {
+    var text = document.getElementById('successText');
+    if (isVip) {
+      text.textContent =
+        'Félicitations ! Votre vote VVIP pour ' + artistName +
+        ' a bien été enregistré. Vous recevrez une invitation premium VVIP pour la remise des prix.';
+    } else {
+      text.textContent =
+        'Félicitations ! Vous avez voté pour ' + artistName +
+        '. Vous serez invité(e) à la remise des trophées.';
+    }
+    document.getElementById('contactBtn').href =
+      'fan-messages.html?artist=' + encodeURIComponent(artistId);
+    showStep('stepSuccess');
+  }
+
+  document.getElementById('closeModal').onclick = closeModal;
+  document.getElementById('overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.querySelectorAll('.pack').forEach(function (el) {
+    el.querySelector('.btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      openModal({
+        votes: el.dataset.votes,
+        price: el.dataset.price,
+        tier: el.dataset.tier
+      });
+    });
+  });
+
+  document.getElementById('optInstant').onclick = function () { showStep('stepInstant'); };
+  document.getElementById('optPhysical').onclick = function () { showStep('stepPhysical'); };
+
+  document.querySelectorAll('#payVip .pay-option').forEach(function (opt) {
+    opt.onclick = function () {
+      var method = opt.getAttribute('data-vip');
+      var labels = { paypal: 'PayPal', postepay: 'PostePay', bank: 'Virement bancaire' };
+      document.getElementById('vipMethod').textContent = labels[method] || method;
+      document.getElementById('vipMsg').textContent =
+        'Un comptable va vous transmettre le RIB / les instructions pour votre paiement (' +
+        (labels[method] || method) +
+        '). Après le paiement, déposez la capture d’écran ci-dessous.';
+      showStep('stepVipInfo');
+    };
+  });
+
+  function needFile(inputId) {
+    var f = document.getElementById(inputId).files[0];
+    if (!f) {
+      alert('Veuillez déposer une photo / capture de votre paiement.');
+      return false;
+    }
+    return true;
+  }
+
+  document.getElementById('submitInstant').onclick = function () {
+    if (!needFile('proofInstant')) return;
+    completeVote(false);
+  };
+  document.getElementById('submitPhysical').onclick = function () {
+    if (!needFile('proofPhysical')) return;
+    completeVote(false);
+  };
+  document.getElementById('submitVip').onclick = function () {
+    if (!needFile('proofVip')) return;
+    completeVote(true);
+  };
+
+  (async function init() {
+    if (!artistId) {
+      location.href = 'index.html';
+      return;
+    }
+    try {
+      if (typeof api !== 'function') throw new Error('api.js manquant');
+      var artist = await api('/artists/' + encodeURIComponent(artistId));
+      artistName = artist.name || 'Artiste';
+      document.getElementById('name').textContent = artistName;
+      document.getElementById('genre').textContent = artist.genre || 'Artiste';
+      document.getElementById('bioShort').textContent = artist.bio_short || '';
+      document.getElementById('avatar').src = mediaUrl(artist.avatar_url) || mediaUrl(artist.cover_url) || PLACEHOLDER;
+      document.title = 'Voter pour ' + artistName + ' — Backstage Legends';
+    } catch (err) {
+      console.warn(err);
+      alert('Artiste introuvable.');
+      location.href = 'index.html';
+    }
+  })();
+})();
+</script>
+</body>
+</html>
