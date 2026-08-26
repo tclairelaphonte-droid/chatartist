@@ -345,7 +345,7 @@ function renderPage(a, artistId) {
   document.getElementById("bioFull").textContent = a.bioFull || "";
   document.title = (a.name || "Artiste") + " — Backstage Legends";
 
-  var voteHref = "vote.html?id=" + encodeURIComponent(artistId);
+  var voteHref = "votes.html?id=" + encodeURIComponent(artistId);
   var discussHref = "fan-messages.html?artist=" + encodeURIComponent(artistId);
   document.getElementById("voteBtn").href = voteHref;
   document.getElementById("voteBtn2").href = voteHref;
