@@ -299,7 +299,7 @@ footer span{color:var(--gold);}
     var token = localStorage.getItem('backstage_token');
     var role = localStorage.getItem('backstage_role');
     if (!token || role === 'manager' || role === 'admin') {
-      var next = encodeURIComponent('vote.html?id=' + (artistId || ''));
+      var next = encodeURIComponent('votes.html?id=' + (artistId || ''));
       location.href = 'login.html?next=' + next;
       return false;
     }
