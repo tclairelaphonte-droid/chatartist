@@ -31,7 +31,7 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:12px;paddi
 .btn.ok:hover{background:var(--green-soft);}
 .btn.primary{background:var(--red);border-color:var(--red);color:#fff;}
 .btn.primary:hover{background:var(--red-dark);}
-main{flex:1;padding:20px 16px 40px;max-width:900px;width:100%;margin:0 auto;}
+main{flex:1;padding:20px 16px 40px;max-width:960px;width:100%;margin:0 auto;}
 h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600;}
 .lead{color:var(--muted);font-size:14px;margin:0 0 24px;}
 .section-title{font-family:var(--font-display);font-size:22px;margin:36px 0 8px;font-weight:600;}
@@ -50,20 +50,21 @@ h1{font-family:var(--font-display);font-size:26px;margin:0 0 6px;font-weight:600
 .artists li{font-size:13px;color:var(--muted);margin:4px 0;}
 .empty,.err{text-align:center;padding:40px 16px;color:var(--muted);font-family:var(--font-mono);font-size:13px;}
 .err{color:var(--red);}
-.table-wrap{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top;}
+.table-wrap{border:1px solid var(--border);border-radius:14px;overflow:auto;background:#fff;}
+table{width:100%;border-collapse:collapse;min-width:560px;}
+th,td{padding:12px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
 th{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface);}
 td.email{word-break:break-all;font-weight:500;}
 td.muted{color:var(--muted);font-size:12px;}
 tr:last-child td{border-bottom:none;}
+.btn.sm{padding:6px 10px;font-size:12px;}
 @media(min-width:640px){
   nav{padding:16px 28px;}
   main{padding:28px 24px 48px;}
   h1{font-size:30px;}
 }
 @media(max-width:520px){
-  th:nth-child(3),td:nth-child(3){display:none;}
+  th:nth-child(4),td:nth-child(4){display:none;}
 }
 </style>
 </head>
@@ -82,9 +83,10 @@ tr:last-child td{border-bottom:none;}
   <div id="list"><div class="empty">Chargement…</div></div>
 
   <h2 class="section-title">Emails fans inscrits</h2>
-  <p class="lead">Tous les fans qui se connectent avec leur email apparaissent ici. Copiez la liste pour envoyer des invitations.</p>
+  <p class="lead">Tous les fans connectés par email. Vous pouvez copier la liste ou supprimer des comptes pour alléger la base.</p>
   <div class="toolbar">
     <button type="button" class="btn primary" id="btnCopyEmails">Copier tous les emails</button>
+    <button type="button" class="btn danger" id="btnDeleteSelected">Supprimer la sélection</button>
     <button type="button" class="btn" id="btnRefreshFans">Actualiser</button>
     <span class="count" id="fansCount">—</span>
   </div>
@@ -129,6 +131,14 @@ tr:last-child td{border-bottom:none;}
     }
   }
 
+  function escapeHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   async function loadFans() {
     fansBox.innerHTML = '<div class="empty">Chargement…</div>';
     fansCount.textContent = '—';
@@ -145,15 +155,21 @@ tr:last-child td{border-bottom:none;}
       }
 
       var rows = fans.map(function (f) {
+        var id = f.id || '';
+        var email = f.email || '';
         return (
-          '<tr>' +
-            '<td class="email">' + (f.email || '') + '</td>' +
-            '<td class="muted">' + (f.username || '—') + '</td>' +
+          '<tr data-id="' + escapeHtml(id) + '">' +
+            '<td><input type="checkbox" class="fan-check" data-id="' + escapeHtml(id) + '"></td>' +
+            '<td class="email">' + escapeHtml(email) + '</td>' +
+            '<td class="muted">' + escapeHtml(f.username || '—') + '</td>' +
             '<td class="muted">' + formatDate(f.created_at) + '</td>' +
             '<td>' +
               '<span class="badge ' + (f.is_blocked ? 'off' : 'on') + '">' +
                 (f.is_blocked ? 'Bloqué' : 'Actif') +
               '</span>' +
+            '</td>' +
+            '<td>' +
+              '<button type="button" class="btn danger sm btn-del-fan" data-id="' + escapeHtml(id) + '" data-email="' + escapeHtml(email) + '">Supprimer</button>' +
             '</td>' +
           '</tr>'
         );
@@ -162,10 +178,24 @@ tr:last-child td{border-bottom:none;}
       fansBox.innerHTML =
         '<div class="table-wrap"><table>' +
           '<thead><tr>' +
-            '<th>Email</th><th>Pseudo</th><th>Inscrit le</th><th>Statut</th>' +
+            '<th></th><th>Email</th><th>Pseudo</th><th>Inscrit le</th><th>Statut</th><th></th>' +
           '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table></div>';
+
+      fansBox.querySelectorAll('.btn-del-fan').forEach(function (btn) {
+        btn.onclick = async function () {
+          var id = btn.getAttribute('data-id');
+          var email = btn.getAttribute('data-email') || id;
+          if (!confirm('Supprimer le fan « ' + email + ' » ?\nCette action est définitive.')) return;
+          try {
+            await api('/admin/fans/' + encodeURIComponent(id), { method: 'DELETE' });
+            await loadFans();
+          } catch (err) {
+            alert(err.message || 'Suppression impossible');
+          }
+        };
+      });
     } catch (err) {
       fansBox.innerHTML =
         '<div class="err">' + (err.message || err) +
@@ -188,6 +218,29 @@ tr:last-child td{border-bottom:none;}
       });
     } else {
       prompt('Copiez les emails :', text);
+    }
+  };
+
+  document.getElementById('btnDeleteSelected').onclick = async function () {
+    var checks = fansBox.querySelectorAll('.fan-check:checked');
+    var ids = [];
+    checks.forEach(function (c) {
+      var id = c.getAttribute('data-id');
+      if (id) ids.push(id);
+    });
+    if (!ids.length) {
+      alert('Cochez au moins un fan.');
+      return;
+    }
+    if (!confirm('Supprimer ' + ids.length + ' fan(s) ?\nCette action est définitive.')) return;
+    try {
+      await api('/admin/fans/delete-many', {
+        method: 'POST',
+        body: JSON.stringify({ ids: ids })
+      });
+      await loadFans();
+    } catch (err) {
+      alert(err.message || 'Suppression impossible');
     }
   };
 

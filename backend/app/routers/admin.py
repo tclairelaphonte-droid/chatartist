@@ -25,6 +25,10 @@ class FanEmailOut(BaseModel):
         from_attributes = True
 
 
+class FanIdsIn(BaseModel):
+    ids: list[str]
+
+
 @router.get("/fans", response_model=list[FanEmailOut])
 def list_fans(
     db: Session = Depends(get_db),
@@ -47,6 +51,51 @@ def list_fans(
         )
         for f in fans
     ]
+
+
+@router.delete("/fans/{fan_id}")
+def delete_fan(
+    fan_id: str,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Supprime un compte fan."""
+    fan = (
+        db.query(User)
+        .filter(User.id == fan_id, User.role == UserRole.fan)
+        .first()
+    )
+    if not fan:
+        raise HTTPException(status_code=404, detail="Fan introuvable.")
+
+    db.delete(fan)
+    db.commit()
+    return {"ok": True, "id": fan_id}
+
+
+@router.post("/fans/delete-many")
+def delete_fans_many(
+    payload: FanIdsIn,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Supprime plusieurs fans. Body: { \"ids\": [\"...\"] }"""
+    if not payload.ids:
+        raise HTTPException(status_code=400, detail="Liste d'ids vide.")
+
+    deleted = 0
+    for fan_id in payload.ids:
+        fan = (
+            db.query(User)
+            .filter(User.id == fan_id, User.role == UserRole.fan)
+            .first()
+        )
+        if fan:
+            db.delete(fan)
+            deleted += 1
+
+    db.commit()
+    return {"ok": True, "deleted": deleted}
 
 
 @router.get("/managers", response_model=list[ManagerAdminOut])
@@ -130,17 +179,3 @@ def block_manager(
 def unblock_manager(
     manager_id: str,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
-):
-    """Rétablit l'accès du manager."""
-    manager = (
-        db.query(User)
-        .filter(User.id == manager_id, User.role == UserRole.manager)
-        .first()
-    )
-    if not manager:
-        raise HTTPException(status_code=404, detail="Manager introuvable.")
-
-    manager.is_blocked = False
-    db.commit()
-    return {"ok": True, "id": manager.id, "is_blocked": False}
