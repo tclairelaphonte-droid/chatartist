@@ -179,3 +179,17 @@ def block_manager(
 def unblock_manager(
     manager_id: str,
     db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    """Rétablit l'accès du manager."""
+    manager = (
+        db.query(User)
+        .filter(User.id == manager_id, User.role == UserRole.manager)
+        .first()
+    )
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager introuvable.")
+
+    manager.is_blocked = False
+    db.commit()
+    return {"ok": True, "id": manager.id, "is_blocked": False}
